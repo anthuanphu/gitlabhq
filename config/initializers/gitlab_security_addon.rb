@@ -13,11 +13,23 @@ Rails.application.config.after_initialize do
   require 'gitlab_security/overrides/git_access'
   require 'gitlab_security/overrides/project_policy'
   require 'gitlab_security/overrides/project'
+  require 'gitlab_security/middleware/security_blocker'
+  require 'gitlab_security/middleware/vs_code_detector'
 
   Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
   ProjectPolicy.prepend(GitlabSecurity::Overrides::ProjectPolicy)
   Project.prepend(GitlabSecurity::Overrides::Project)
-  Rails.logger.info('[GitlabSecurity] v%s all overrides OK' % GitlabSecurity::VERSION)
+
+  Rails.application.config.middleware.insert_before(
+    Gitlab::Middleware::ReadOnly,
+    GitlabSecurity::Middleware::SecurityBlocker
+  )
+  Rails.application.config.middleware.insert_before(
+    Gitlab::Middleware::ReadOnly,
+    GitlabSecurity::Middleware::VsCodeDetector
+  )
+
+  Rails.logger.info('[GitlabSecurity] v%s FULL loaded' % GitlabSecurity::VERSION)
 rescue => e
   Rails.logger.warn('[GitlabSecurity] FAIL: %s' % e.message)
 end
