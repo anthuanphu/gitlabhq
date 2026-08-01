@@ -1,10 +1,19 @@
 Rails.application.config.after_initialize do
   root = Rails.root.join('gitlab_security_addon')
-  if root.exist?
-    $LOAD_PATH.unshift(root.join('lib').to_s)
-    require 'gitlab_security/version'
-    Rails.logger.info('[GitlabSecurity] v%s OK' % GitlabSecurity::VERSION)
-  end
+  next unless root.exist?
+
+  lib = root.join('lib')
+  $LOAD_PATH.unshift(lib.to_s)
+
+  require 'gitlab_security/version'
+  require 'gitlab_security/models/security_policy'
+  require 'gitlab_security/models/security_audit_log'
+  require 'gitlab_security/models/security_access_grant'
+  require 'gitlab_security/models/device_whitelist'
+  require 'gitlab_security/overrides/git_access'
+
+  Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
+  Rails.logger.info('[GitlabSecurity] v%s + GitAccess OK' % GitlabSecurity::VERSION)
 rescue => e
   Rails.logger.warn('[GitlabSecurity] FAIL: %s' % e.message)
 end
