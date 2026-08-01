@@ -5,4 +5,3 @@ ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
 
 COPY gitlab_security_addon/ ${GITLAB_RAILS_DIR}/gitlab_security_addon/
 COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/initializers/
-COPY gitlab_security_addon/db/migrate/ ${GITLAB_RAILS_DIR}/db/migrate/
