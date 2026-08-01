@@ -36,11 +36,12 @@ services:
       - gitlab_data:/var/opt/gitlab
 
     environment:
-      # GitLab URL (đổi thành domain thật khi deploy)
+      # GitLab URL + External DB (1 biến duy nhất cho database)
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.local:8080'
-        gitlab_rails['gitlab_ssh_host'] = 'gitlab.local'
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        external_url '${EXTERNAL_URL:-http://localhost:8080}'
+        gitlab_rails['gitlab_shell_ssh_port'] = ${SSH_PORT:-2222}
+        postgresql['enable'] = false
+        gitlab_rails['db_url'] = '${DATABASE_URL}'
 
     restart: unless-stopped
     shm_size: "256m"
