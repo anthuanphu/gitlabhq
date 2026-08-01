@@ -10,7 +10,8 @@
 #   - Kết quả: addon tiếp tục hoạt động bình thường sau merge
 # =============================================================================
 
-if defined?(Rails::Server) || ENV['GITLAB_SECURITY_LOAD'] == 'true' || Rails.env.test?
+# Chạy trong mọi môi trường trừ rake/console (tránh lỗi khi chạy migration)
+if !defined?(Rails::Console) && !(defined?(Rake) && Rake.application.top_level_tasks.any?)
   Rails.application.reloader.to_prepare do
     begin
       security_addon_root = Rails.root.join('gitlab_security_addon')

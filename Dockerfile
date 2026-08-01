@@ -24,21 +24,15 @@ COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/ini
 # 3. Copy database migration vào db/migrate/ để Rails tự động pick up
 COPY gitlab_security_addon/db/migrate/ ${GITLAB_RAILS_DIR}/db/migrate/
 
+# 4. Copy post-reconfigure script (chạy migration khi container start)
+COPY gitlab_security_addon/scripts/post-reconfigure.sh /assets/security-post-reconfigure.sh
+RUN chmod +x /assets/security-post-reconfigure.sh
+
 # ---------------------------------------------------------------------------
 # Tự động chạy migration khi container start
 # ---------------------------------------------------------------------------
-# GITLAB_POST_RECONFIGURE_SCRIPT chạy sau khi gitlab-ctl reconfigure hoàn tất
-# https://docs.gitlab.com/omnibus/settings/configuration.html#run-scripts
-ENV GITLAB_POST_RECONFIGURE_SCRIPT="\
-  echo '============================================' && \
-  echo ' GitLab Security Addon - Initializing...' && \
-  echo '============================================' && \
-  echo 'Running security addon database migrations...' && \
-  /opt/gitlab/bin/gitlab-rake db:migrate || echo 'Migration skipped (may already be up-to-date)' && \
-  echo 'Security addon initialized successfully!' && \
-  echo 'Admin panel: /admin/security_policies' && \
-  echo '============================================' \
-"
+# Dùng script file thay vì inline (tránh lỗi escape backslash trong Docker ENV)
+ENV GITLAB_POST_RECONFIGURE_SCRIPT=/assets/security-post-reconfigure.sh
 
 # ---------------------------------------------------------------------------
 # Labels

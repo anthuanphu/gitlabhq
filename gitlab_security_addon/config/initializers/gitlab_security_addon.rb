@@ -16,8 +16,8 @@
 #   4. Run: bundle exec rake db:migrate
 # =============================================================================
 
-# Only load in Rails server context (not in rake tasks or console unless specified)
-if defined?(Rails::Server) || ENV['GITLAB_SECURITY_LOAD'] == 'true' || Rails.env.test?
+# Chạy trong mọi môi trường trừ rake/console (tránh lỗi khi chạy migration)
+if !defined?(Rails::Console) && !(defined?(Rake) && Rake.application.top_level_tasks.any?)
   Rails.application.reloader.to_prepare do
     begin
       # Add security addon paths to Rails autoload paths
