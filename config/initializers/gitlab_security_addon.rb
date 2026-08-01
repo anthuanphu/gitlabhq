@@ -1,79 +1,57 @@
 # frozen_string_literal: true
 
 # =============================================================================
-# GITLAB SECURITY ADDON - Core Initializer
-# =============================================================================
-# FILE DUY NHẤT được thêm vào mã nguồn lõi GitLab.
-# Khi upstream (gitlabhq/gitlabhq) cập nhật và bạn merge về:
-#   - File này KHÔNG có trong upstream → git merge không xung đột
-#   - Thư mục gitlab_security_addon/ KHÔNG có trong upstream → không xung đột
-#   - Kết quả: addon tiếp tục hoạt động bình thường sau merge
+# GITLAB SECURITY ADDON - Core Initializer (Robust Version)
 # =============================================================================
 
-# Chạy trong mọi môi trường trừ rake/console (tránh lỗi khi chạy migration)
-if !defined?(Rails::Console) && !(defined?(Rake) && Rake.application.top_level_tasks.any?)
-  Rails.application.reloader.to_prepare do
-    begin
-      security_addon_root = Rails.root.join('gitlab_security_addon')
+Rails.application.config.after_initialize do
+  begin
+    addon_root = Rails.root.join('gitlab_security_addon')
+    next unless addon_root.exist?
 
-      if security_addon_root.exist?
-        # Thêm đường dẫn autoload cho thư mục addon
-        lib_path = security_addon_root.join('lib')
-        $LOAD_PATH.unshift(lib_path.to_s) unless $LOAD_PATH.include?(lib_path.to_s)
-
-        %w[controllers models services helpers].each do |dir|
-          path = security_addon_root.join('app', dir)
-          if path.exist?
-            ActiveSupport::Dependencies.autoload_paths << path.to_s
-            Rails.application.config.eager_load_paths << path.to_s
-          end
-        end
-
-        # Load module chính
-        require 'gitlab_security'
-
-        # =====================================================================
-        # Ghi đè GitLab core classes bằng Ruby prepend (không sửa file gốc)
-        # =====================================================================
-
-        if defined?(Gitlab::GitAccess)
-          Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
-          Rails.logger.info('[GitlabSecurity] GitAccess override applied')
-        end
-
-        if defined?(ProjectPolicy)
-          ProjectPolicy.prepend(GitlabSecurity::Overrides::ProjectPolicy)
-          Rails.logger.info('[GitlabSecurity] ProjectPolicy override applied')
-        end
-
-        if defined?(Project)
-          Project.prepend(GitlabSecurity::Overrides::Project)
-          Rails.logger.info('[GitlabSecurity] Project model override applied')
-        end
-
-        # Đăng ký middleware bảo mật
-        Rails.application.config.middleware.insert_before(
-          Gitlab::Middleware::ReadOnly,
-          GitlabSecurity::Middleware::SecurityBlocker
-        ) rescue Rails.logger.warn('[GitlabSecurity] Could not insert SecurityBlocker')
-
-        Rails.application.config.middleware.insert_before(
-          Gitlab::Middleware::ReadOnly,
-          GitlabSecurity::Middleware::VsCodeDetector
-        ) rescue Rails.logger.warn('[GitlabSecurity] Could not insert VsCodeDetector')
-
-        # Gắn admin settings panel
-        if defined?(Admin::ApplicationSettingsController)
-          Admin::ApplicationSettingsController.prepend(GitlabSecurity::AdminSettingsExtension)
-        end
-
-        # Load rake tasks
-        Dir[security_addon_root.join('lib', 'tasks', '**', '*.rake')].each { |f| load f }
-
-        Rails.logger.info("[GitlabSecurity] v#{GitlabSecurity::VERSION} loaded - OK")
-      end
-    rescue StandardError => e
-      Rails.logger.error("[GitlabSecurity] Init failed: #{e.message}")
+    # Thiết lập autoload paths
+    lib = addon_root.join('lib')
+    $LOAD_PATH.unshift(lib.to_s) unless $LOAD_PATH.include?(lib.to_s)
+    %w[controllers models services helpers].each do |d|
+      p = addon_root.join('app', d)
+      next unless p.exist?
+      ActiveSupport::Dependencies.autoload_paths << p.to_s
+      Rails.application.config.eager_load_paths << p.to_s
     end
+
+    require 'gitlab_security/version'
+
+    # Ghi đè GitLab core - mỗi override load độc lập, không kéo theo dependency
+    if defined?(Gitlab::GitAccess)
+      require 'gitlab_security/overrides/git_access'
+      Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
+    end
+
+    if defined?(ProjectPolicy)
+      require 'gitlab_security/overrides/project_policy'
+      ProjectPolicy.prepend(GitlabSecurity::Overrides::ProjectPolicy)
+    end
+
+    if defined?(Project)
+      require 'gitlab_security/overrides/project'
+      Project.prepend(GitlabSecurity::Overrides::Project)
+    end
+
+    if defined?(Admin::ApplicationSettingsController)
+      require 'gitlab_security/admin_settings_extension'
+      Admin::ApplicationSettingsController.prepend(GitlabSecurity::AdminSettingsExtension)
+    end
+
+    # Middleware
+    if defined?(GitlabSecurity::Middleware::SecurityBlocker)
+      Rails.application.config.middleware.insert_before(
+        Gitlab::Middleware::ReadOnly,
+        GitlabSecurity::Middleware::SecurityBlocker
+      )
+    end
+
+    Rails.logger.info('[GitlabSecurity] v%s loaded' % GitlabSecurity::VERSION)
+  rescue => e
+    Rails.logger.warn('[GitlabSecurity] Init skipped: %s' % e.message)
   end
 end
