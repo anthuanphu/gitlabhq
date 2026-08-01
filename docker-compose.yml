@@ -24,9 +24,10 @@ services:
     hostname: gitlab.local
 
     ports:
-      - "80:80"       # HTTP
-      - "443:443"     # HTTPS
-      - "22:22"       # SSH (Git clone qua SSH)
+      # Đổi port để tránh xung đột với coolify-proxy (đang dùng 80, 443)
+      - "8080:80"     # HTTP  → truy cập qua http://IP:8080
+      - "8443:443"    # HTTPS → truy cập qua https://IP:8443
+      - "2222:22"     # SSH   → git clone ssh://git@IP:2222
 
     volumes:
       # Persistent data
@@ -37,7 +38,9 @@ services:
     environment:
       # GitLab URL (đổi thành domain thật khi deploy)
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.local'
+        external_url 'http://gitlab.local:8080'
+        gitlab_rails['gitlab_ssh_host'] = 'gitlab.local'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
 
     restart: unless-stopped
     shm_size: "256m"
