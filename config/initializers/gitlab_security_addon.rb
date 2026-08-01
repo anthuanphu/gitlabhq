@@ -11,9 +11,13 @@ Rails.application.config.after_initialize do
   require 'gitlab_security/models/security_access_grant'
   require 'gitlab_security/models/device_whitelist'
   require 'gitlab_security/overrides/git_access'
+  require 'gitlab_security/overrides/project_policy'
+  require 'gitlab_security/overrides/project'
 
   Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
-  Rails.logger.info('[GitlabSecurity] v%s + GitAccess OK' % GitlabSecurity::VERSION)
+  ProjectPolicy.prepend(GitlabSecurity::Overrides::ProjectPolicy)
+  Project.prepend(GitlabSecurity::Overrides::Project)
+  Rails.logger.info('[GitlabSecurity] v%s all overrides OK' % GitlabSecurity::VERSION)
 rescue => e
   Rails.logger.warn('[GitlabSecurity] FAIL: %s' % e.message)
 end
