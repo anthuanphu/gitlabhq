@@ -21,8 +21,8 @@ COPY gitlab_security_addon/ ${GITLAB_RAILS_DIR}/gitlab_security_addon/
 # 2. Copy Rails initializer (file duy nhất trong core)
 COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/initializers/gitlab_security_addon.rb
 
-# 3. Copy database migration vào db/migrate/ để Rails tự động pick up
-COPY gitlab_security_addon/db/migrate/ ${GITLAB_RAILS_DIR}/db/migrate/
+# 3. Database migration (TẠM TẮT - chạy tay sau khi container ổn định)
+# COPY gitlab_security_addon/db/migrate/ ${GITLAB_RAILS_DIR}/db/migrate/
 
 # 4. Copy post-reconfigure script (tạm tắt để debug crash)
 COPY gitlab_security_addon/scripts/post-reconfigure.sh /assets/security-post-reconfigure.sh
