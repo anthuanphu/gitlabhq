@@ -6,7 +6,7 @@
 #   device_whitelists      - Whitelisted devices and IPs
 #   security_audit_logs    - Audit trail for security events
 #   security_access_grants - Admin-granted access permissions
-class CreateGitlabSecurityTables < ActiveRecord::Migration[7.0]
+class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
   def up
     # =========================================================================
     # Security Policies Table
