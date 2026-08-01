@@ -24,15 +24,13 @@ COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/ini
 # 3. Copy database migration vào db/migrate/ để Rails tự động pick up
 COPY gitlab_security_addon/db/migrate/ ${GITLAB_RAILS_DIR}/db/migrate/
 
-# 4. Copy post-reconfigure script (chạy migration khi container start)
+# 4. Copy post-reconfigure script (tạm tắt để debug crash)
 COPY gitlab_security_addon/scripts/post-reconfigure.sh /assets/security-post-reconfigure.sh
 RUN chmod +x /assets/security-post-reconfigure.sh
 
-# ---------------------------------------------------------------------------
-# Tự động chạy migration khi container start
-# ---------------------------------------------------------------------------
-# Dùng script file thay vì inline (tránh lỗi escape backslash trong Docker ENV)
-ENV GITLAB_POST_RECONFIGURE_SCRIPT=/assets/security-post-reconfigure.sh
+# TẠM TẮT: GITLAB_POST_RECONFIGURE_SCRIPT để debug nguyên nhân crash
+# Sau khi container boot ổn định sẽ bật lại
+# ENV GITLAB_POST_RECONFIGURE_SCRIPT=/assets/security-post-reconfigure.sh
 
 # ---------------------------------------------------------------------------
 # Labels
