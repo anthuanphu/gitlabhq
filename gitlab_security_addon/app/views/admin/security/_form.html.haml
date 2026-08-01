@@ -1,0 +1,187 @@
+-# Admin: New/Edit Security Policy Form
+
+%div{ class: 'admin-security-policy-form' }
+  %div.page-header
+    %h1
+      - if @policy.new_record?
+        = _('New Security Policy')
+      - else
+        = _('Edit Security Policy: %{name}') % { name: @policy.name }
+
+  = form_for @policy, url: (@policy.new_record? ? admin_security_policies_path : admin_security_policy_path(@policy)), html: { class: 'form-horizontal' } do |f|
+    - if @policy.errors.any?
+      %div.alert.alert-danger
+        %strong= _('%{count} errors prohibited this policy from being saved:') % { count: @policy.errors.count }
+        %ul
+          - @policy.errors.full_messages.each do |msg|
+            %li= msg
+
+    -# Basic Information
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('Basic Information')
+      %div.panel-body
+        %div.form-group
+          = f.label :name, _('Policy Name'), class: 'col-sm-2 control-label'
+          %div.col-sm-6
+            = f.text_field :name, class: 'form-control', placeholder: _('Enter policy name...'), required: true
+        %div.form-group
+          = f.label :description, _('Description'), class: 'col-sm-2 control-label'
+          %div.col-sm-6
+            = f.text_area :description, class: 'form-control', rows: 3, placeholder: _('Describe the purpose of this policy...')
+        %div.form-group
+          = f.label :policy_type, _('Policy Type'), class: 'col-sm-2 control-label'
+          %div.col-sm-3
+            = f.select :policy_type, [['Global', 'global'], ['Project', 'project'], ['Group', 'group'], ['Namespace', 'namespace']], {}, class: 'form-control'
+        %div.form-group.project-select{ style: ('display:none;' unless @policy.policy_type == 'project') }
+          = f.label :project_id, _('Project'), class: 'col-sm-2 control-label'
+          %div.col-sm-6
+            = f.select :project_id, @projects.map { |p| [p.full_name, p.id] }, { include_blank: _('Select project...') }, class: 'form-control'
+        %div.form-group.group-select{ style: ('display:none;' unless @policy.policy_type == 'group') }
+          = f.label :group_id, _('Group'), class: 'col-sm-2 control-label'
+          %div.col-sm-6
+            = f.select :group_id, @groups.map { |g| [g.full_name, g.id] }, { include_blank: _('Select group...') }, class: 'form-control'
+
+    -# Access Controls
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('Access Controls')
+        %span.help-block= _('Choose which operations to block for projects under this policy.')
+      %div.panel-body
+        %div.form-group
+          %div.col-sm-offset-2.col-sm-8
+            %div.checkbox
+              %label
+                = f.check_box :block_clone
+                %strong= _('Block Clone')
+                %span.help-block= _('Prevent git clone operations (git clone, git pull, git fetch)')
+            %div.checkbox
+              %label
+                = f.check_box :block_download
+                %strong= _('Block Download')
+                %span.help-block= _('Prevent downloading source code (zip/tar downloads, raw file access)')
+            %div.checkbox
+              %label
+                = f.check_box :block_fork
+                %strong= _('Block Fork')
+                %span.help-block= _('Prevent forking this project to other namespaces')
+            %div.checkbox
+              %label
+                = f.check_box :block_share
+                %strong= _('Block Share')
+                %span.help-block= _('Prevent sharing project with external users/groups')
+
+    -# Connection Controls
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('Connection Controls')
+        %span.help-block= _('Block external tools and IDE connections.')
+      %div.panel-body
+        %div.form-group
+          %div.col-sm-offset-2.col-sm-8
+            %div.checkbox
+              %label
+                = f.check_box :block_vscode_access
+                %strong= _('Block VS Code Access')
+                %span.help-block= _('Prevent VS Code connections including GitLab Workflow extension')
+            %div.checkbox
+              %label
+                = f.check_box :block_all_ide_access
+                %strong= _('Block All IDE Access')
+                %span.help-block= _('Prevent all external IDE connections (VS Code, JetBrains, Eclipse, etc.)')
+            %div.checkbox
+              %label
+                = f.check_box :block_http_access
+                %strong= _('Block HTTP Access')
+                %span.help-block= _('Prevent git operations over HTTP/HTTPS protocol')
+            %div.checkbox
+              %label
+                = f.check_box :block_ssh_access
+                %strong= _('Block SSH Access')
+                %span.help-block= _('Prevent git operations over SSH protocol')
+            %div.checkbox
+              %label
+                = f.check_box :block_all_external_tools
+                %strong= _('Block All External Tools')
+                %span.help-block= _('Block ALL connections except web browser access')
+
+    -# Enforcement
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('Enforcement Settings')
+      %div.panel-body
+        %div.form-group
+          = f.label :enforcement_level, _('Enforcement Level'), class: 'col-sm-2 control-label'
+          %div.col-sm-4
+            = f.select :enforcement_level, [
+              [_('Audit Only - Log but allow'), 0],
+              [_('Soft Block - Block with override'), 1],
+              [_('Hard Block - Absolute block'), 2]
+            ], {}, class: 'form-control'
+          %div.col-sm-6
+            %span.help-block
+              %strong Audit Only:
+              = _('Log all actions but do not block any.')
+              %br
+              %strong Soft Block:
+              = _('Block access but allow admin-override exceptions.')
+              %br
+              %strong Hard Block:
+              = _('Absolutely block access. No exceptions, including admin.')
+        %div.form-group
+          %div.col-sm-offset-2.col-sm-8
+            %div.checkbox
+              %label
+                = f.check_box :require_admin_approval
+                %strong= _('Require Admin Approval')
+                %span.help-block= _('Users must request and receive admin approval to bypass this policy')
+        %div.form-group
+          %div.col-sm-offset-2.col-sm-8
+            %div.checkbox
+              %label
+                = f.check_box :enabled
+                %strong= _('Enable Policy')
+                %span.help-block= _('When disabled, this policy has no effect')
+
+    -# IP & Device Restrictions
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('IP & Device Restrictions')
+      %div.panel-body
+        %div.form-group
+          = f.label :allowed_ip_ranges, _('Allowed IP Ranges'), class: 'col-sm-2 control-label'
+          %div.col-sm-8
+            = f.text_area :allowed_ip_ranges, class: 'form-control', rows: 3, placeholder: "10.0.0.0/8\n192.168.1.0/24\n172.16.0.0/12"
+            %span.help-block= _('CIDR notation, one per line. Leave empty to allow all IPs.')
+        %div.form-group
+          = f.label :blocked_ip_ranges, _('Blocked IP Ranges'), class: 'col-sm-2 control-label'
+          %div.col-sm-8
+            = f.text_area :blocked_ip_ranges, class: 'form-control', rows: 3, placeholder: "203.0.113.0/24\n198.51.100.0/24"
+            %span.help-block= _('CIDR notation, one per line.')
+        %div.form-group
+          = f.label :allowed_user_agents, _('Allowed User Agents'), class: 'col-sm-2 control-label'
+          %div.col-sm-8
+            = f.text_area :allowed_user_agents, class: 'form-control', rows: 2, placeholder: "git/*\ncurl/*"
+            %span.help-block= _('Regex patterns, one per line.')
+        %div.form-group
+          = f.label :blocked_user_agents, _('Blocked User Agents'), class: 'col-sm-2 control-label'
+          %div.col-sm-8
+            = f.text_area :blocked_user_agents, class: 'form-control', rows: 2, placeholder: "vscode\nJetBrains"
+            %span.help-block= _('Regex patterns, one per line.')
+
+    -# Time Restrictions
+    %div.panel.panel-default
+      %div.panel-heading
+        %strong= _('Time-Based Restrictions')
+      %div.panel-body
+        %div.form-group
+          = f.label :time_restrictions, _('Time Restrictions (JSON)'), class: 'col-sm-2 control-label'
+          %div.col-sm-8
+            = f.text_area :time_restrictions, class: 'form-control', rows: 4, placeholder: '[{"day_of_week": [1,2,3,4,5], "start_time": "09:00", "end_time": "18:00"}]'
+            %span.help-block= _('JSON array. day_of_week: 0=Sunday, 1=Monday, ..., 6=Saturday')
+
+    -# Submit
+    %div.form-group
+      %div.col-sm-offset-2.col-sm-8
+        = f.submit _('Save Policy'), class: 'btn btn-primary'
+        = link_to _('Cancel'), admin_security_policies_path, class: 'btn btn-default'

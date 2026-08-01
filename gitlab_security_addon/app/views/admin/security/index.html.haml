@@ -1,0 +1,123 @@
+-# Admin: Security Policies Index
+-# Lists all security policies with management options
+
+%div{ class: 'admin-security-policies' }
+  %div.page-header
+    %h1
+      = _('Security Policies')
+    %div.page-header-actions
+      = link_to _('New Policy'), new_admin_security_policy_path, class: 'btn btn-primary'
+      = link_to _('Audit Log'), audit_log_admin_security_policies_path, class: 'btn btn-default'
+      = link_to _('Device Whitelist'), admin_device_whitelists_path, class: 'btn btn-default'
+
+  -# Statistics Cards
+  %div.security-stats.row
+    %div.col-sm-3
+      %div.panel.panel-info
+        %div.panel-heading= _('Active Policies')
+        %div.panel-body.text-center
+          %h2= @stats[:active_policies]
+    %div.col-sm-3
+      %div.panel.panel-warning
+        %div.panel-heading= _('Blocks Today')
+        %div.panel-body.text-center
+          %h2= @stats[:total_blocks_today]
+    %div.col-sm-3
+      %div.panel.panel-danger
+        %div.panel-heading= _('Blocks This Week')
+        %div.panel-body.text-center
+          %h2= @stats[:total_blocks_this_week]
+    %div.col-sm-3
+      %div.panel.panel-default
+        %div.panel-heading= _('Unique Blocked IPs')
+        %div.panel-body.text-center
+          %h2= @stats[:unique_blocked_ips]
+
+  -# Global Policy Status
+  %div.panel.panel-default
+    %div.panel-heading
+      %strong= _('Global Default Policy')
+      %span.label.label-info Global
+    %div.panel-body
+      - if @global_policy
+        %div.row
+          %div.col-sm-6
+            %dl.dl-horizontal
+              %dt= _('Name')
+              %dd= @global_policy.name
+              %dt= _('Enforcement Level')
+              %dd
+                %span{ class: enforcement_level_class(@global_policy.enforcement_level) }
+                  = @global_policy.enforcement_level.humanize
+              %dt= _('Status')
+              %dd
+                - if @global_policy.enabled?
+                  %span.label.label-success= _('Active')
+                - else
+                  %span.label.label-default= _('Inactive')
+          %div.col-sm-6
+            %strong= _('Blocked Operations:')
+            %ul.list-unstyled
+              - @global_policy.blocked_operations.each do |op|
+                %li
+                  %span.label.label-danger= op.to_s.humanize
+            - if @global_policy.blocked_operations.empty?
+              %p.text-muted= _('No operations are blocked globally.')
+        %div.row
+          %div.col-sm-12
+            = link_to _('Edit Global Policy'), edit_admin_security_policy_path(@global_policy), class: 'btn btn-sm btn-default'
+      - else
+        %p.text-warning= _('No global policy configured. Create one to set default security rules.')
+        = link_to _('Create Global Policy'), new_admin_security_policy_path(policy_type: 'global'), class: 'btn btn-primary'
+
+  -# Policies Table
+  %div.panel.panel-default
+    %div.panel-heading
+      %strong= _('All Policies')
+    %div.table-responsive
+      %table.table.table-hover
+        %thead
+          %tr
+            %th= _('Name')
+            %th= _('Type')
+            %th= _('Applies To')
+            %th= _('Enforcement')
+            %th= _('Blocked Operations')
+            %th= _('Status')
+            %th= _('Created')
+            %th= _('Actions')
+        %tbody
+          - @policies.each do |policy|
+            %tr
+              %td
+                = link_to policy.name, admin_security_policy_path(policy)
+                - if policy.is_global_default?
+                  %span.label.label-info Global
+              %td= policy.policy_type.humanize
+              %td
+                - if policy.project
+                  = link_to policy.project.name, project_path(policy.project)
+                - elsif policy.group
+                  = link_to policy.group.name, group_path(policy.group)
+                - else
+                  %span.text-muted= _('All Projects')
+              %td
+                %span{ class: enforcement_level_class(policy.enforcement_level) }
+                  = policy.enforcement_level.humanize
+              %td
+                - policy.blocked_operations.first(3).each do |op|
+                  %span.label.label-danger{ style: 'margin-right: 3px;' }= op.to_s.humanize
+                - if policy.blocked_operations.size > 3
+                  %span.label.label-default= "+#{policy.blocked_operations.size - 3}"
+              %td
+                - if policy.enabled?
+                  %span.label.label-success Active
+                - else
+                  %span.label.label-default Inactive
+              %td= l(policy.created_at, format: :short)
+              %td
+                = link_to _('Edit'), edit_admin_security_policy_path(policy), class: 'btn btn-xs btn-default'
+                = link_to _('Toggle'), toggle_admin_security_policy_path(policy), method: :post, class: 'btn btn-xs btn-warning'
+                = link_to _('Delete'), admin_security_policy_path(policy), method: :delete, data: { confirm: _('Are you sure?') }, class: 'btn btn-xs btn-danger'
+
+  = paginate @policies

@@ -1,0 +1,124 @@
+-# Admin: Audit Log View
+
+%div{ class: 'admin-security-audit-log' }
+  %div.page-header
+    %h1= _('Security Audit Log')
+    %div.page-header-actions
+      = link_to _('Back to Policies'), admin_security_policies_path, class: 'btn btn-default'
+
+  -# Statistics
+  %div.audit-stats.row
+    %div.col-sm-3
+      %div.panel.panel-default
+        %div.panel-heading= _('Total Events (7 days)')
+        %div.panel-body.text-center
+          %h2= @log_stats[:total_events]
+    %div.col-sm-3
+      %div.panel.panel-danger
+        %div.panel-heading= _('Blocked Events')
+        %div.panel-body.text-center
+          %h2= @log_stats[:blocked_events]
+    %div.col-sm-3
+      %div.panel.panel-success
+        %div.panel-heading= _('Allowed Events')
+        %div.panel-body.text-center
+          %h2= @log_stats[:allowed_events]
+    %div.col-sm-3
+      %div.panel.panel-info
+        %div.panel-heading= _('Unique Users')
+        %div.panel-body.text-center
+          %h2= @log_stats[:unique_users]
+
+  -# Filters
+  %div.panel.panel-default
+    %div.panel-heading= _('Filters')
+    %div.panel-body
+      = form_tag audit_log_admin_security_policies_path, method: :get, class: 'form-inline' do
+        %div.form-group
+          = label_tag :event_type, _('Event Type'), class: 'control-label'
+          = select_tag :event_type, options_for_select(GitlabSecurity::SecurityAuditLog::EVENT_TYPES.map { |t| [t.humanize, t] }, params[:event_type]), include_blank: _('All Types'), class: 'form-control'
+        %div.form-group
+          = label_tag :result, _('Result'), class: 'control-label'
+          = select_tag :result, options_for_select([['Allowed', 'allowed'], ['Blocked', 'blocked'], ['Error', 'error']], params[:result]), include_blank: _('All'), class: 'form-control'
+        %div.form-group
+          = label_tag :date_from, _('From'), class: 'control-label'
+          = date_field_tag :date_from, params[:date_from], class: 'form-control'
+        %div.form-group
+          = label_tag :date_to, _('To'), class: 'control-label'
+          = date_field_tag :date_to, params[:date_to], class: 'form-control'
+        %div.form-group
+          = label_tag :ip_address, _('IP'), class: 'control-label'
+          = text_field_tag :ip_address, params[:ip_address], class: 'form-control', placeholder: 'IP Address'
+        = submit_tag _('Filter'), class: 'btn btn-primary'
+        = link_to _('Clear'), audit_log_admin_security_policies_path, class: 'btn btn-default'
+
+  -# Top Blocked IPs
+  - if @log_stats[:top_blocked_ips].present?
+    %div.panel.panel-warning
+      %div.panel-heading= _('Top Blocked IPs (7 days)')
+      %div.panel-body
+        %table.table.table-condensed
+          %thead
+            %tr
+              %th= _('IP Address')
+              %th= _('Block Count')
+          %tbody
+            - @log_stats[:top_blocked_ips].each do |ip, count|
+              %tr
+                %td= ip
+                %td
+                  %span.label.label-warning= count
+
+  -# Log Entries
+  %div.panel.panel-default
+    %div.panel-heading
+      %strong= _('Log Entries')
+      %span.badge= @logs.total_count
+    %div.table-responsive
+      %table.table.table-hover.table-condensed
+        %thead
+          %tr
+            %th= _('Time')
+            %th= _('Event')
+            %th= _('Result')
+            %th= _('User')
+            %th= _('Project')
+            %th= _('IP Address')
+            %th= _('Reason')
+            %th= _('Details')
+        %tbody
+          - @logs.each do |log|
+            %tr{ class: log_row_class(log.result) }
+              %td= l(log.created_at, format: :short)
+              %td
+                %code= log.event_type
+              %td
+                - case log.result
+                - when 'blocked'
+                  %span.label.label-danger= _('Blocked')
+                - when 'allowed'
+                  %span.label.label-success= _('Allowed')
+                - when 'error'
+                  %span.label.label-warning= _('Error')
+                - else
+                  %span.label.label-default= log.result
+              %td
+                - if log.user
+                  = link_to log.user.username, admin_user_path(log.user)
+                - else
+                  %span.text-muted= _('Anonymous')
+              %td
+                - if log.project
+                  = link_to log.project.name, project_path(log.project)
+                - else
+                  %span.text-muted -
+              %td
+                %small= log.ip_address || '-'
+              %td
+                %small.text-muted= log.block_reason || '-'
+              %td
+                - if log.details.present?
+                  %small
+                    %pre{ style: 'max-width: 200px; overflow: auto; font-size: 10px;' }= JSON.pretty_generate(log.details)
+
+  = paginate @logs
