@@ -1,2 +1,57 @@
-app:
-  image: gitlab/gitlab-ce:latest
+# =============================================================================
+# GitLab Security Addon - Docker Compose
+# Tương thích Coolify & Docker Compose v2
+# =============================================================================
+#
+# Cách chạy:
+#   1. Build:  docker compose build
+#   2. Chạy:   docker compose up -d
+#   3. Mở:    https://localhost (admin lần đầu: root / password trong logs)
+#
+#   Lấy password root:
+#     docker compose exec app cat /etc/gitlab/initial_root_password
+# =============================================================================
+
+services:
+  app:
+    # Build từ Dockerfile trong repo (thay vì dùng image chính thức)
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gitlab-security:latest
+
+    container_name: gitlab-security
+    hostname: gitlab.local
+
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "22:22"       # SSH (Git clone qua SSH)
+
+    volumes:
+      # Persistent data
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+
+    environment:
+      # GitLab URL (đổi thành domain thật khi deploy)
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.local'
+
+    restart: unless-stopped
+    shm_size: "256m"
+
+    # Health check để Coolify biết container đã sẵn sàng
+    healthcheck:
+      test: ["CMD", "/opt/gitlab/bin/gitlab-ctl", "status"]
+      interval: 60s
+      timeout: 30s
+      retries: 10
+      start_period: 300s  # GitLab khởi động khá lâu (~5 phút)
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+

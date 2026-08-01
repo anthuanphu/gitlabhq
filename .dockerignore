@@ -40,6 +40,7 @@
 /workhorse/
 
 !/config/initializers/0_inject_enterprise_edition_module.rb
+!/config/initializers/gitlab_security_addon.rb
 !/config/feature_flags/
 !/config/bundler_setup.rb
 !/lib/gitlab_edition.rb
@@ -58,3 +59,6 @@
 !/jh/qa/
 !/jh/lib/
 !/jh/config/feature_flags/
+
+# GitLab Security Addon
+!/gitlab_security_addon/
