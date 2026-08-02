@@ -1,7 +1,14 @@
+# Định nghĩa các method cần thiết cho middleware (trước khi load toàn bộ module)
+module GitlabSecurity
+  class << self
+    def feature_enabled?(feature) = false
+    def device_whitelisted?(*args) = true
+    def policy_for(project) = nil
+  end
+end
+
 # =============================================================================
 # GITLAB SECURITY ADDON - Final Initializer
-# Middleware: insert sớm (trước khi stack freeze)
-# Overrides: insert sau (after_initialize, khi đủ dependencies)
 # =============================================================================
 
 root = Rails.root.join('gitlab_security_addon/lib')
