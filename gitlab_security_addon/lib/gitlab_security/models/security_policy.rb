@@ -10,18 +10,13 @@ module GitlabSecurity
   class SecurityPolicy < ApplicationRecord
     self.table_name = 'security_policies'
 
-    include Gitlab::SQL::Pattern
-
-    # Enforcement levels
     AUDIT_ONLY  = 0
     SOFT_BLOCK  = 1
     HARD_BLOCK  = 2
 
-    enum :enforcement_level, {
-      audit_only: AUDIT_ONLY,
-      soft_block: SOFT_BLOCK,
-      hard_block: HARD_BLOCK
-    }
+    def enforcement_level_audit_only?
+      enforcement_level == AUDIT_ONLY
+    end
 
     # Associations
     belongs_to :project, optional: true

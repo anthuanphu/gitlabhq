@@ -69,7 +69,7 @@ module GitlabSecurity
 
         # Check if clone/download is blocked
         if policy.operation_blocked?(:clone) || policy.operation_blocked?(:download)
-          if policy.enforcement_level == 'hard_block'
+          if policy.enforcement_level == GitlabSecurity::SecurityPolicy::HARD_BLOCK
             # Check if user has explicit admin-granted access
             user = try(:user)
             if user && GitlabSecurity::SecurityAccessGrant.user_has_grant?(
@@ -86,14 +86,14 @@ module GitlabSecurity
               'Contact your administrator to request access.',
               status: 403
             )
-          elsif policy.enforcement_level == 'soft_block'
+          elsif policy.enforcement_level == GitlabSecurity::SecurityPolicy::SOFT_BLOCK
             log_security_event('clone_soft_blocked', 'blocked')
             # Soft block - still block but with different message
             return ::Gitlab::GitAccessResult::Failure.new(
               'Clone/download access restricted. An access request has been logged.',
               status: 403
             )
-          elsif policy.enforcement_level == 'audit_only'
+          elsif policy.enforcement_level == GitlabSecurity::SecurityPolicy::AUDIT_ONLY
             # Just audit, don't block
             log_security_event('clone_audit', 'allowed')
             return nil

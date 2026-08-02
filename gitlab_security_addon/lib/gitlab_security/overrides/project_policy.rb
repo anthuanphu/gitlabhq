@@ -97,7 +97,7 @@ module GitlabSecurity
         return false unless policy&.enabled?
 
         policy.operation_blocked?(operation) &&
-          policy.enforcement_level != 'audit_only'
+          policy.enforcement_level != GitlabSecurity::SecurityPolicy::AUDIT_ONLY
       end
 
       # Check if admin operations are also blocked by policy
