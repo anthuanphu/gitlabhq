@@ -3,6 +3,7 @@
 root = Rails.root.join('gitlab_security_addon/lib')
 if root.exist?
   begin
+    require root.join('gitlab_security').to_s
     require root.join('gitlab_security/middleware/security_blocker').to_s
     require root.join('gitlab_security/middleware/vs_code_detector').to_s
     Rails.application.config.middleware.insert_before(

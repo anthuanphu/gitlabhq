@@ -74,3 +74,4 @@
 !/app/controllers/admin/projects_controller.rb
 !/config/routes/admin.rb
 !/app/views/admin/projects/show.html.haml
+!/scripts/docker-entrypoint.sh
