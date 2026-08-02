@@ -1,9 +1,14 @@
-# Định nghĩa các method cần thiết cho middleware (trước khi load toàn bộ module)
+# Stubs cho middleware (an toàn, trả về mặc định)
 module GitlabSecurity
+  VERSION = '1.0.0' unless const_defined?(:VERSION)
   class << self
-    def feature_enabled?(feature) = false
-    def device_whitelisted?(*args) = true
-    def policy_for(project) = nil
+    def feature_enabled?(f) = false
+    def device_whitelisted?(*) = true
+    def policy_for(p)
+      SecurityPolicy.find_by(project: p) || SecurityPolicy.global_default
+    rescue
+      nil
+    end
   end
 end
 
