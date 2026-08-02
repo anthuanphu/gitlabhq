@@ -1,19 +1,30 @@
+# =============================================================================
+# GITLAB SECURITY ADDON - Final Initializer
+# Middleware: insert sớm (trước khi stack freeze)
+# Overrides: insert sau (after_initialize, khi đủ dependencies)
+# =============================================================================
+
 root = Rails.root.join('gitlab_security_addon/lib')
 if root.exist?
+  # --- Middleware (phải load + insert ngay, trước khi stack freeze) ---
   require root.join('gitlab_security/version').to_s
-  require root.join('gitlab_security/middleware/security_blocker').to_s
-  require root.join('gitlab_security/middleware/vs_code_detector').to_s
-  # Insert before stack freezes
   begin
-    if defined?(Gitlab::Middleware::ReadOnly)
-      Rails.application.config.middleware.insert_before(Gitlab::Middleware::ReadOnly, GitlabSecurity::Middleware::SecurityBlocker)
-      Rails.application.config.middleware.insert_before(Gitlab::Middleware::ReadOnly, GitlabSecurity::Middleware::VsCodeDetector)
-    end
+    require root.join('gitlab_security/middleware/security_blocker').to_s
+    require root.join('gitlab_security/middleware/vs_code_detector').to_s
+    Rails.application.config.middleware.insert_before(
+      Gitlab::Middleware::ReadOnly,
+      GitlabSecurity::Middleware::SecurityBlocker
+    ) rescue nil
+    Rails.application.config.middleware.insert_before(
+      Gitlab::Middleware::ReadOnly,
+      GitlabSecurity::Middleware::VsCodeDetector
+    ) rescue nil
   rescue => e
     Rails.logger.warn('[GitlabSecurity] mw: %s' % e.message)
   end
 end
 
+# --- Overrides + Models (sau khi Rails fully initialized) ---
 Rails.application.config.after_initialize do
   begin
     root = Rails.root.join('gitlab_security_addon/lib')
@@ -28,7 +39,7 @@ Rails.application.config.after_initialize do
     ProjectPolicy.prepend(GitlabSecurity::Overrides::ProjectPolicy)
     require root.join('gitlab_security/overrides/project').to_s
     Project.prepend(GitlabSecurity::Overrides::Project)
-    Rails.logger.info('[GitlabSecurity] v%s FULL' % GitlabSecurity::VERSION)
+    Rails.logger.info('[GitlabSecurity] v%s OK' % GitlabSecurity::VERSION)
   rescue => e
     Rails.logger.warn('[GitlabSecurity] %s' % e.message)
   end
