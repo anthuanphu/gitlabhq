@@ -7,6 +7,8 @@
 #   security_audit_logs    - Audit trail for security events
 #   security_access_grants - Admin-granted access permissions
 class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
+  milestone '19.2'
+
   def up
     # =========================================================================
     # Security Policies Table
