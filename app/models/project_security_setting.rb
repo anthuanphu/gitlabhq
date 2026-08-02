@@ -5,7 +5,16 @@ class ProjectSecuritySetting < ApplicationRecord
 
   validates :project_id, presence: true, uniqueness: true
 
-  scope :enabled, -> { where(enabled: true) }
+  # Define attributes explicitly so they work even before the DB table exists.
+  # Once the table is created, the DB-backed attributes take precedence.
+  attribute :enabled, :boolean, default: true
+  attribute :allow_clone, :boolean, default: false
+  attribute :allow_download, :boolean, default: false
+  attribute :allow_fork, :boolean, default: false
+  attribute :allow_export, :boolean, default: false
+  attribute :allow_ide_access, :boolean, default: false
+
+  scope :with_protection_enabled, -> { where(enabled: true) }
 
   # Check if a specific action is blocked for this project
   def block?(action)

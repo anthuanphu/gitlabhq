@@ -20,11 +20,11 @@ class Admin::ProjectsController < Admin::ApplicationController
       @project.members.page(page_params[:project_members_page]))
     @requesters = present_members(
       AccessRequestsFinder.new(@project).execute(current_user))
-    @security_setting = @project.security_setting || @project.build_security_setting
+    @security_setting = load_security_setting
   end
 
   def update_security
-    setting = @project.security_setting || @project.build_security_setting
+    setting = load_security_setting
     setting.assign_attributes(security_params)
     if setting.save
       redirect_to admin_project_path(@project), notice: _('Security settings updated.')
@@ -34,6 +34,14 @@ class Admin::ProjectsController < Admin::ApplicationController
   end
 
   private
+
+  def load_security_setting
+    if ActiveRecord::Base.connection.table_exists?(:project_security_settings)
+      @project.security_setting || @project.build_security_setting
+    else
+      @project.build_security_setting
+    end
+  end
 
   def security_params
     params.require(:project_security_setting).permit(:allow_clone, :allow_download, :allow_fork, :allow_export, :allow_ide_access, :enabled)
