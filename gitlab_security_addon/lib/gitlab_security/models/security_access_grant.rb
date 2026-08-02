@@ -41,11 +41,15 @@ module GitlabSecurity
               .for_project(project)
               .for_grant_type(grant_type)
               .exists?
+      rescue
+        false
       end
 
       # Check if user has any active grant for a project
       def user_has_any_grant?(user:, project:)
         active.for_user(user).for_project(project).exists?
+      rescue
+        false
       end
 
       # Get all active grants for a user
