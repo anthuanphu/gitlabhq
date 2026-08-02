@@ -62,3 +62,12 @@
 
 # GitLab Security Addon
 !/gitlab_security_addon/
+
+# Security: core modified files
+!/db/migrate/20240803000001_create_project_security_settings.rb
+!/app/models/project_security_setting.rb
+!/app/models/project.rb
+!/lib/gitlab/git_access.rb
+!/app/controllers/projects/repositories_controller.rb
+!/app/controllers/projects/raw_controller.rb
+!/app/services/projects/fork_service.rb

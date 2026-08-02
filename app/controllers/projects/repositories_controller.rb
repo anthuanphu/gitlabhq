@@ -35,6 +35,11 @@ class Projects::RepositoriesController < Projects::ApplicationController
   end
 
   def archive
+    if @project.security_setting&.block?(:download)
+      render plain: 'Download disabled by administrator.', status: :forbidden
+      return
+    end
+
     set_cache_headers
 
     return if archive_not_modified?

@@ -332,6 +332,7 @@ class Project < ApplicationRecord
   has_one :incident_management_setting, inverse_of: :project, class_name: 'IncidentManagement::ProjectIncidentManagementSetting'
   has_one :error_tracking_setting, inverse_of: :project, class_name: 'ErrorTracking::ProjectErrorTrackingSetting'
   has_one :project_setting, inverse_of: :project, autosave: true
+  has_one :security_setting, class_name: 'ProjectSecuritySetting'
   has_one :service_desk_setting, class_name: 'ServiceDeskSetting'
   has_one :service_desk_custom_email_verification, class_name: 'ServiceDesk::CustomEmailVerification'
   has_one :service_desk_custom_email_credential, class_name: 'ServiceDesk::CustomEmailCredential'

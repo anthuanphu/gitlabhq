@@ -21,6 +21,11 @@ class Projects::RawController < Projects::ApplicationController
   feature_category :source_code_management
 
   def show
+    if @project.security_setting&.block?(:download)
+      render plain: 'Raw file access disabled by administrator.', status: :forbidden
+      return
+    end
+
     @blob = @repository.blob_at(ref, @path, limit: Gitlab::Git::Blob::LFS_POINTER_MAX_SIZE)
 
     send_blob(@repository, @blob, inline: (params[:inline] != 'false'), allow_caching:

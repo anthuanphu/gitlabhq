@@ -15,9 +15,9 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
     # Defines what operations are blocked/allowed for projects and groups
     # =========================================================================
     create_table :security_policies, if_not_exists: true do |t|
-      t.references :project, null: true, foreign_key: { on_delete: :cascade }
-      t.references :group, null: true, foreign_key: { on_delete: :cascade }
-      t.references :namespace, null: true, foreign_key: { on_delete: :cascade }
+      t.references :project, null: true
+      t.references :group, null: true
+      t.references :namespace, null: true
 
       # Policy type: 'global', 'project', 'group'
       t.string :policy_type, null: false, default: 'project', limit: 50
@@ -67,8 +67,8 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
       t.timestamps_with_timezone
       t.datetime_with_timezone :deleted_at
 
-      t.references :created_by, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
-      t.references :updated_by, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
+      t.references :created_by, null: true
+      t.references :updated_by, null: true
     end
 
     add_index :security_policies, :policy_type, name: 'idx_security_policies_on_policy_type'
@@ -81,9 +81,9 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
     # Controls which devices/IPs are explicitly allowed to connect
     # =========================================================================
     create_table :device_whitelists, if_not_exists: true do |t|
-      t.references :user, null: true, foreign_key: { on_delete: :cascade }
-      t.references :project, null: true, foreign_key: { on_delete: :cascade }
-      t.references :group, null: true, foreign_key: { on_delete: :cascade }
+      t.references :user, null: true
+      t.references :project, null: true
+      t.references :group, null: true
 
       # Device identification
       t.string :device_name, limit: 255
@@ -114,7 +114,7 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
       t.timestamps_with_timezone
       t.datetime_with_timezone :deleted_at
 
-      t.references :approved_by, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
+      t.references :approved_by, null: true
     end
 
     add_index :device_whitelists, :ip_address, name: 'idx_device_whitelists_on_ip'
@@ -126,9 +126,9 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
     # Comprehensive audit trail for all security events
     # =========================================================================
     create_table :security_audit_logs, if_not_exists: true do |t|
-      t.references :user, null: true, foreign_key: { on_delete: :nullify }
-      t.references :project, null: true, foreign_key: { on_delete: :nullify }
-      t.references :security_policy, null: true, foreign_key: { on_delete: :nullify }
+      t.references :user, null: true
+      t.references :project, null: true
+      t.references :security_policy, null: true
 
       # Event classification
       t.string :event_type, null: false, limit: 100
@@ -163,7 +163,7 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
 
       t.datetime_with_timezone :created_at, null: false
 
-      t.references :actor, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
+      t.references :actor, null: true
     end
 
     add_index :security_audit_logs, :event_type, name: 'idx_security_audit_logs_on_event_type'
@@ -177,10 +177,10 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
     # Tracks admin-granted temporary/permanent access overrides
     # =========================================================================
     create_table :security_access_grants, if_not_exists: true do |t|
-      t.references :user, null: false, foreign_key: { on_delete: :cascade }
-      t.references :project, null: true, foreign_key: { on_delete: :cascade }
-      t.references :group, null: true, foreign_key: { on_delete: :cascade }
-      t.references :security_policy, null: true, foreign_key: { on_delete: :nullify }
+      t.references :user, null: false
+      t.references :project, null: true
+      t.references :group, null: true
+      t.references :security_policy, null: true
 
       # Grant type
       t.string :grant_type, null: false, limit: 100
@@ -199,8 +199,8 @@ class CreateGitlabSecurityTables < Gitlab::Database::Migration[2.3]
 
       t.timestamps_with_timezone
 
-      t.references :granted_by, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
-      t.references :revoked_by, null: true, foreign_key: { to_table: :users, on_delete: :nullify }
+      t.references :granted_by, null: true
+      t.references :revoked_by, null: true
     end
 
     add_index :security_access_grants, [:user_id, :project_id, :grant_type],

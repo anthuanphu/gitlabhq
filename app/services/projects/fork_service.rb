@@ -3,6 +3,10 @@
 module Projects
   class ForkService < BaseService
     def execute(fork_to_project = nil)
+      if @project.security_setting&.block?(:fork)
+        return ServiceResponse.error(message: 'Forking has been disabled for this project.', reason: :forbidden)
+      end
+
       response = fork_to_project ? link_existing_project(fork_to_project) : fork_new_project
 
       after_fork(response[:project]) if response.success?
