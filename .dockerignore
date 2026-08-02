@@ -71,3 +71,6 @@
 !/app/controllers/projects/repositories_controller.rb
 !/app/controllers/projects/raw_controller.rb
 !/app/services/projects/fork_service.rb
+!/app/controllers/admin/projects_controller.rb
+!/config/routes/admin.rb
+!/app/views/admin/projects/show.html.haml

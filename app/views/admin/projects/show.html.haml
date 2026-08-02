@@ -200,3 +200,26 @@
       - unless @project_members.size < Kaminari.config.default_per_page
         - c.with_footer do
           = paginate @project_members, param_name: 'project_members_page', theme: 'gitlab'
+
+= render ::Layouts::CrudComponent.new(_('Source Code Protection')) do |c|
+  - c.with_body do
+    = form_for @security_setting, url: update_security_admin_project_path(@project), method: :post, html: { class: 'gl-form' } do |f|
+      .gl-form-group
+        = f.check_box :enabled
+        = f.label :enabled, _('Enable source code protection for this project')
+      .gl-form-group
+        = f.check_box :allow_clone
+        = f.label :allow_clone, _('Allow git clone/pull')
+      .gl-form-group
+        = f.check_box :allow_download
+        = f.label :allow_download, _('Allow download ZIP/TAR')
+      .gl-form-group
+        = f.check_box :allow_fork
+        = f.label :allow_fork, _('Allow fork project')
+      .gl-form-group
+        = f.check_box :allow_export
+        = f.label :allow_export, _('Allow export project')
+      .gl-form-group
+        = f.check_box :allow_ide_access
+        = f.label :allow_ide_access, _('Allow IDE connections (VS Code, JetBrains...)')
+      = f.submit _('Save'), class: 'btn btn-primary'

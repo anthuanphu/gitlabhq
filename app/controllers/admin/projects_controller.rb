@@ -3,10 +3,10 @@
 class Admin::ProjectsController < Admin::ApplicationController
   include MembersPresentation
 
-  before_action :project, only: [:show, :transfer, :repository_check, :destroy, :edit, :update]
+  before_action :project, only: [:show, :transfer, :repository_check, :destroy, :edit, :update, :update_security]
   before_action :group, only: [:show, :transfer]
 
-  feature_category :groups_and_projects, [:index, :show, :transfer, :destroy, :edit, :update]
+  feature_category :groups_and_projects, [:index, :show, :transfer, :destroy, :edit, :update, :update_security]
   feature_category :source_code_management, [:repository_check]
 
   # rubocop: disable CodeReuse/ActiveRecord
@@ -20,6 +20,23 @@ class Admin::ProjectsController < Admin::ApplicationController
       @project.members.page(page_params[:project_members_page]))
     @requesters = present_members(
       AccessRequestsFinder.new(@project).execute(current_user))
+    @security_setting = @project.security_setting || @project.build_security_setting
+  end
+
+  def update_security
+    setting = @project.security_setting || @project.build_security_setting
+    setting.assign_attributes(security_params)
+    if setting.save
+      redirect_to admin_project_path(@project), notice: _('Security settings updated.')
+    else
+      redirect_to admin_project_path(@project), alert: setting.errors.full_messages.join(', ')
+    end
+  end
+
+  private
+
+  def security_params
+    params.require(:project_security_setting).permit(:allow_clone, :allow_download, :allow_fork, :allow_export, :allow_ide_access, :enabled)
   end
   # rubocop: enable CodeReuse/ActiveRecord
 

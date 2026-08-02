@@ -165,6 +165,7 @@ namespace :admin do
       member do
         put :transfer
         post :repository_check
+        post :update_security
         get :edit, action: :edit
         get '/', action: :show
         patch '/', action: :update

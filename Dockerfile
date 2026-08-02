@@ -17,3 +17,6 @@ COPY lib/gitlab/git_access.rb ${GITLAB_RAILS_DIR}/lib/gitlab/
 COPY app/controllers/projects/repositories_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/projects/
 COPY app/controllers/projects/raw_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/projects/
 COPY app/services/projects/fork_service.rb ${GITLAB_RAILS_DIR}/app/services/projects/
+COPY app/controllers/admin/projects_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/admin/
+COPY config/routes/admin.rb ${GITLAB_RAILS_DIR}/config/routes/
+COPY app/views/admin/projects/show.html.haml ${GITLAB_RAILS_DIR}/app/views/admin/projects/
