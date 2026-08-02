@@ -7,7 +7,9 @@ Rails.application.config.after_initialize do
   require 'gitlab_security/models/security_audit_log'
   require 'gitlab_security/models/security_access_grant'
   require 'gitlab_security/models/device_whitelist'
-  Rails.logger.info('[GitlabSecurity] models loaded')
+  require 'gitlab_security/overrides/git_access'
+  Gitlab::GitAccess.prepend(GitlabSecurity::Overrides::GitAccess)
+  Rails.logger.info('[GitlabSecurity] +GitAccess')
 rescue => e
   Rails.logger.warn('[GitlabSecurity] %s' % e.message)
 end
