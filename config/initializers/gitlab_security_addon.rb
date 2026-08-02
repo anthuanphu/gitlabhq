@@ -1,3 +1,4 @@
-# No overrides - baseline test
-
+Rails.application.config.after_initialize do
+  Rails.logger.info('[GitlabSecurity] Loaded')
+end
 
