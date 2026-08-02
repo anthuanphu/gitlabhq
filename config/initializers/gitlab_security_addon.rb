@@ -1,6 +1,6 @@
-# Stubs cho middleware (an toàn, trả về mặc định)
+# Stubs cho middleware (an toàn)
 module GitlabSecurity
-  VERSION = '1.0.0' unless const_defined?(:VERSION)
+  VERSION = '1.0.0' unless const_defined?(:VERSION, false)
   class << self
     def feature_enabled?(f) = false
     def device_whitelisted?(*) = true
