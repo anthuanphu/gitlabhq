@@ -11,6 +11,14 @@ services:
       - gitlab_data:/var/opt/gitlab
     restart: unless-stopped
     shm_size: "256m"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['nginx']['listen_port'] = 8228;
+        gitlab_rails['nginx']['listen_https'] = false;
+        puma['worker_processes'] = 2;
+        sidekiq['max_concurrency'] = 10;
+        postgresql['shared_buffers'] = '256MB';
+        prometheus_monitoring['enable'] = false;
 
 volumes:
   gitlab_config:

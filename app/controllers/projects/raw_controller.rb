@@ -21,7 +21,7 @@ class Projects::RawController < Projects::ApplicationController
   feature_category :source_code_management
 
   def show
-    if @project.security_setting&.block?(:download)
+    if @project.security_setting&.block?(:download) && !current_user&.can_admin_all_resources?
       render plain: 'Raw file access disabled by administrator.', status: :forbidden
       return
     end

@@ -35,7 +35,7 @@ class Projects::RepositoriesController < Projects::ApplicationController
   end
 
   def archive
-    if @project.security_setting&.block?(:download)
+    if @project.security_setting&.block?(:download) && !current_user&.can_admin_all_resources?
       render plain: 'Download disabled by administrator.', status: :forbidden
       return
     end
