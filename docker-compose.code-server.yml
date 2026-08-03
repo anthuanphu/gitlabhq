@@ -4,11 +4,27 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - PASSWORD=change-this-password
+      - PASSWORD=Aurix@2026
       - DEFAULT_WORKSPACE=/workspace
     volumes:
       - code_workspace:/workspace
       - code_config:/config
+    restart: unless-stopped
+    networks:
+      - coolify
+
+  auto-clone:
+    image: python:3.12-alpine
+    ports:
+      - "3000:3000"
+    command: sh -c "apk add --no-cache git && python3 /scripts/auto-clone.py"
+    environment:
+      - GITLAB_URL=http://gitlab:8228
+      - GITLAB_TOKEN=${GITLAB_ADMIN_TOKEN:-}
+      - CODE_SERVER_URL=http://code-server:8443
+    volumes:
+      - ../scripts/auto-clone.py:/scripts/auto-clone.py:ro
+      - code_workspace:/workspace
     restart: unless-stopped
     networks:
       - coolify
