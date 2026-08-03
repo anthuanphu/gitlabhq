@@ -1,0 +1,26 @@
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - PASSWORD=change-this-password
+      - DEFAULT_WORKSPACE=/workspace
+    volumes:
+      - code_workspace:/workspace
+      - code_config:/config
+    restart: unless-stopped
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
+
+volumes:
+  code_workspace:
+  code_config:
+  code_workspace:
+  code_config:
+  code_workspace:
+  code_config:
