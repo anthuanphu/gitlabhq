@@ -60,10 +60,8 @@
 !/jh/lib/
 !/jh/config/feature_flags/
 
-# GitLab Security Addon
-!/gitlab_security_addon/
-
-# Security: core modified files
+# Source Code Protection
+!/config/initializers/gitlab_security_addon.rb
 !/db/migrate/20240803000001_create_project_security_settings.rb
 !/app/models/project_security_setting.rb
 !/app/models/project.rb

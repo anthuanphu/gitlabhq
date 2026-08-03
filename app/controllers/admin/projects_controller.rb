@@ -20,10 +20,12 @@ class Admin::ProjectsController < Admin::ApplicationController
       @project.members.page(page_params[:project_members_page]))
     @requesters = present_members(
       AccessRequestsFinder.new(@project).execute(current_user))
+    ProjectSecuritySetting.ensure_table!
     @security_setting = load_security_setting
   end
 
   def update_security
+    ProjectSecuritySetting.ensure_table!
     setting = load_security_setting
     setting.assign_attributes(security_params)
     if setting.save

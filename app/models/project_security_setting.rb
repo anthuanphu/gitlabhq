@@ -16,6 +16,30 @@ class ProjectSecuritySetting < ApplicationRecord
 
   scope :with_protection_enabled, -> { where(enabled: true) }
 
+  # Auto-create the table on first access (lazy, no boot delay).
+  # Called by admin controller; idempotent via if_not_exists.
+  def self.ensure_table!
+    return if @table_checked
+    @table_checked = true
+    return if connection.table_exists?(:project_security_settings)
+
+    connection.create_table :project_security_settings, if_not_exists: true do |t|
+      t.bigint :project_id, null: false
+      t.index :project_id, unique: true
+      t.boolean :allow_clone, default: false, null: false
+      t.boolean :allow_download, default: false, null: false
+      t.boolean :allow_fork, default: false, null: false
+      t.boolean :allow_export, default: false, null: false
+      t.boolean :allow_ide_access, default: false, null: false
+      t.boolean :enabled, default: true, null: false
+      t.timestamps_with_timezone null: false
+    end
+    Rails.logger.info('[SourceProtection] Table created')
+  rescue => e
+    @table_checked = false
+    Rails.logger.warn('[SourceProtection] %s' % e.message)
+  end
+
   # Check if a specific action is blocked for this project
   def block?(action)
     return false unless enabled?

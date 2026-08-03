@@ -3,13 +3,8 @@ FROM gitlab/gitlab-ce:latest
 ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
     GITLAB_OMNIBUS_CONFIG="gitlab_rails['nginx']['listen_port'] = 8228; gitlab_rails['nginx']['listen_https'] = false; puma['worker_processes'] = 2; sidekiq['max_concurrency'] = 10; postgresql['shared_buffers'] = '256MB'; prometheus_monitoring['enable'] = false; gitlab_kas['enable'] = false; grafana['enable'] = false; gitlab_pages['enable'] = false; registry['enable'] = false; mattermost['enable'] = false"
 
-# Security Addon (legacy middleware helpers)
-COPY gitlab_security_addon/ ${GITLAB_RAILS_DIR}/gitlab_security_addon/
+# Source Code Protection
 COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/initializers/
-COPY gitlab_security_addon/scripts/run_migration.sh /usr/local/bin/gitlab-security-migrate
-RUN chmod +x /usr/local/bin/gitlab-security-migrate
-
-# Security: core modifications (migration + model + enforcement)
 COPY db/migrate/20240803000001_create_project_security_settings.rb ${GITLAB_RAILS_DIR}/db/migrate/
 COPY app/models/project_security_setting.rb ${GITLAB_RAILS_DIR}/app/models/
 COPY app/models/project.rb ${GITLAB_RAILS_DIR}/app/models/
@@ -20,8 +15,3 @@ COPY app/services/projects/fork_service.rb ${GITLAB_RAILS_DIR}/app/services/proj
 COPY app/controllers/admin/projects_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/admin/
 COPY config/routes/admin.rb ${GITLAB_RAILS_DIR}/config/routes/
 COPY app/views/admin/projects/show.html.haml ${GITLAB_RAILS_DIR}/app/views/admin/projects/
-
-# Healthcheck: GitLab Omnibus needs ~5 min to fully boot.
-# start-period=300s tells Coolify/Docker to wait before checking.
-HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
-  CMD curl -sf http://localhost:8228/-/health || exit 1

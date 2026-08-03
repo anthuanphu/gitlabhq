@@ -370,7 +370,8 @@ module Gitlab
     end
 
     def check_download_access!
-      # Security: block clone/download per project settings
+      # Security: auto-create table + block clone/download per project
+      ProjectSecuritySetting.ensure_table!
       if project&.security_setting&.block?(:clone)
         raise ForbiddenError, 'Source code download has been disabled for this project. Contact your administrator.'
       end
