@@ -17,13 +17,46 @@ services:
     image: python:3.12-alpine
     ports:
       - "3000:3000"
-    command: sh -c "apk add --no-cache git && python3 /scripts/auto-clone.py"
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache git > /dev/null 2>&1
+        cat > /tmp/auto-clone.py << 'PYEOF'
+        import subprocess, os, urllib.parse
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+        WORKSPACE = '/workspace'
+        GITLAB_URL = os.environ.get('GITLAB_URL', 'http://gitlab:8228')
+        GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN', '')
+        CODE_URL = os.environ.get('CODE_SERVER_URL', 'http://localhost:8443')
+        class H(BaseHTTPRequestHandler):
+            def do_GET(self):
+                p = urllib.parse.urlparse(self.path)
+                q = urllib.parse.parse_qs(p.query)
+                proj = q.get('project', [None])[0]
+                if p.path == '/open' and proj:
+                    folder = WORKSPACE + '/' + proj
+                    if not os.path.exists(folder):
+                        url = GITLAB_URL + '/' + proj + '.git'
+                        if GITLAB_TOKEN:
+                            url = 'http://oauth2:' + GITLAB_TOKEN + '@gitlab:8228/' + proj + '.git'
+                        subprocess.run(['git', 'clone', '--depth', '1', url, folder], check=False, timeout=120)
+                    self.send_response(302)
+                    self.send_header('Location', CODE_URL + '/?folder=' + folder)
+                    self.end_headers()
+                else:
+                    self.send_response(302)
+                    self.send_header('Location', CODE_URL + '/')
+                    self.end_headers()
+            def log_message(self, *a): pass
+        HTTPServer(('0.0.0.0', 3000), H).serve_forever()
+        PYEOF
+        exec python3 /tmp/auto-clone.py
     environment:
       - GITLAB_URL=http://gitlab:8228
       - GITLAB_TOKEN=${GITLAB_ADMIN_TOKEN:-}
       - CODE_SERVER_URL=http://code-server:8443
     volumes:
-      - ../scripts/auto-clone.py:/scripts/auto-clone.py:ro
       - code_workspace:/workspace
     restart: unless-stopped
     networks:
