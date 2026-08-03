@@ -1,36 +1,10 @@
 # GitLab Source Protection - Middleware (IDE blocking)
 # Core enforcement: git_access.rb, repositories_controller.rb, etc.
-
-# Auto-migrate: ensure project_security_settings table exists on boot.
-# Retries because PostgreSQL may not be ready when Puma starts in Omnibus.
-Rails.application.config.after_initialize do
-  10.times do |attempt|
-    begin
-      unless ActiveRecord::Base.connection.table_exists?(:project_security_settings)
-        ActiveRecord::Base.connection.create_table :project_security_settings, if_not_exists: true do |t|
-          t.bigint :project_id, null: false
-          t.index :project_id, unique: true
-          t.boolean :allow_clone, default: false, null: false
-          t.boolean :allow_download, default: false, null: false
-          t.boolean :allow_fork, default: false, null: false
-          t.boolean :allow_export, default: false, null: false
-          t.boolean :allow_ide_access, default: false, null: false
-          t.boolean :enabled, default: true, null: false
-          t.timestamps_with_timezone null: false
-        end
-        Rails.logger.info('[SourceProtection] Auto-created table: project_security_settings')
-      end
-      break # success
-    rescue => e
-      if attempt < 9
-        Rails.logger.warn('[SourceProtection] Waiting for DB (attempt %d)...' % (attempt + 1))
-        sleep(3)
-      else
-        Rails.logger.warn('[SourceProtection] Auto-migrate failed after 10 attempts: %s' % e.message)
-      end
-    end
-  end
-end
+#
+# NOTE: The project_security_settings table is NOT auto-created here.
+# Run ONCE after container is fully up:
+#   docker exec <container> gitlab-rails db:migrate
+# Model uses attribute declarations so the app works even before the table exists.
 
 # Stub GitlabSecurity module — provides the minimal API the middleware needs.
 # All real enforcement is in core (git_access.rb, fork_service.rb, controllers).
