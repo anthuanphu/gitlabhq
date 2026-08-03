@@ -23,9 +23,15 @@ class IdeController < ApplicationController
   track_internal_event :index, name: 'web_ide_viewed'
 
   def index
-    # Redirect Web IDE to self-hosted Code Server with auto-clone
+    # Clone project to shared workspace, then open in Code Server
     if project.present?
-      redirect_to "https://code.aurixsystems.vn/clone/open?project=#{project.full_path}", allow_other_host: true
+      folder = "/workspace/#{project.full_path}"
+      unless Dir.exist?(folder)
+        token = ENV['GITLAB_WORKSPACE_TOKEN']
+        url = token ? "http://oauth2:#{token}@localhost:8228/#{project.full_path}.git" : "http://localhost:8228/#{project.full_path}.git"
+        system("git", "clone", "--depth", "1", url, folder)
+      end
+      redirect_to "https://code.aurixsystems.vn/?folder=#{folder}", allow_other_host: true
     else
       redirect_to "https://code.aurixsystems.vn/", allow_other_host: true
     end

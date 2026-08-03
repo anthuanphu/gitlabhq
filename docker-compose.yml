@@ -9,6 +9,7 @@ services:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
+      - workspace:/workspace
     restart: unless-stopped
     shm_size: "256m"
     environment:
@@ -20,9 +21,24 @@ services:
         sidekiq['max_concurrency'] = 10;
         postgresql['shared_buffers'] = '256MB';
         prometheus_monitoring['enable'] = false;
+      GITLAB_WORKSPACE_TOKEN: ${GITLAB_ADMIN_TOKEN:-}
+
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - PASSWORD=Aurix@2026
+      - DEFAULT_WORKSPACE=/workspace
+    volumes:
+      - workspace:/workspace
+      - code_config:/config
+    restart: unless-stopped
 
 volumes:
   gitlab_config:
   gitlab_logs:
   gitlab_data:
+  workspace:
+  code_config:
 
