@@ -20,3 +20,8 @@ COPY app/services/projects/fork_service.rb ${GITLAB_RAILS_DIR}/app/services/proj
 COPY app/controllers/admin/projects_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/admin/
 COPY config/routes/admin.rb ${GITLAB_RAILS_DIR}/config/routes/
 COPY app/views/admin/projects/show.html.haml ${GITLAB_RAILS_DIR}/app/views/admin/projects/
+
+# Healthcheck: GitLab Omnibus needs ~5 min to fully boot.
+# start-period=300s tells Coolify/Docker to wait before checking.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
+  CMD curl -sf http://localhost:8228/-/health || exit 1
