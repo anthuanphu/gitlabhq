@@ -25,7 +25,7 @@ class IdeController < ApplicationController
   def index
     # Redirect Web IDE to self-hosted Code Server with auto-clone
     if project.present?
-      redirect_to "https://code.aurixsystems.vn:3022/open?project=#{project.full_path}", allow_other_host: true
+      redirect_to "https://code.aurixsystems.vn/clone/open?project=#{project.full_path}", allow_other_host: true
     else
       redirect_to "https://code.aurixsystems.vn/", allow_other_host: true
     end

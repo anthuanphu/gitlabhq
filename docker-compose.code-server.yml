@@ -9,14 +9,13 @@ services:
     volumes:
       - code_workspace:/workspace
       - code_config:/config
+      - ../config/code-server-nginx.conf:/config/nginx/site-confs/clone.conf:ro
     restart: unless-stopped
     networks:
       - coolify
 
   auto-clone:
     image: python:3.12-alpine
-    ports:
-      - "3022:3000"
     command:
       - sh
       - -c
@@ -55,7 +54,7 @@ services:
     environment:
       - GITLAB_URL=http://gitlab:8228
       - GITLAB_TOKEN=${GITLAB_ADMIN_TOKEN:-}
-      - CODE_SERVER_URL=http://code-server:8443
+      - CODE_SERVER_URL=https://code.aurixsystems.vn
     volumes:
       - code_workspace:/workspace
     restart: unless-stopped
