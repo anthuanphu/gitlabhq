@@ -16,7 +16,7 @@ services:
   auto-clone:
     image: python:3.12-alpine
     ports:
-      - "3000:3000"
+      - "3022:3000"
     command:
       - sh
       - -c
