@@ -23,11 +23,12 @@ class IdeController < ApplicationController
   track_internal_event :index, name: 'web_ide_viewed'
 
   def index
-    @fork_info = fork_info(project, params[:branch])
-
-    @workbench_secret = generate_workbench_secret
-
-    render layout: 'fullscreen'
+    # Redirect Web IDE to self-hosted Code Server
+    if project.present?
+      redirect_to "https://code.aurixsystems.vn/?folder=/workspace/#{project.full_path}", allow_other_host: true
+    else
+      redirect_to "https://code.aurixsystems.vn/", allow_other_host: true
+    end
   end
 
   def oauth_redirect

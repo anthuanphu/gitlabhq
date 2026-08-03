@@ -15,3 +15,4 @@ COPY app/services/projects/fork_service.rb ${GITLAB_RAILS_DIR}/app/services/proj
 COPY app/controllers/admin/projects_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/admin/
 COPY config/routes/admin.rb ${GITLAB_RAILS_DIR}/config/routes/
 COPY app/views/admin/projects/show.html.haml ${GITLAB_RAILS_DIR}/app/views/admin/projects/
+COPY app/controllers/ide_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/

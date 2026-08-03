@@ -72,3 +72,4 @@
 !/app/controllers/admin/projects_controller.rb
 !/config/routes/admin.rb
 !/app/views/admin/projects/show.html.haml
+!/app/controllers/ide_controller.rb
