@@ -29,7 +29,7 @@ class IdeController < ApplicationController
       unless Dir.exist?(folder)
         token = ENV['GITLAB_WORKSPACE_TOKEN']
         url = token ? "http://oauth2:#{token}@localhost:8228/#{project.full_path}.git" : "http://localhost:8228/#{project.full_path}.git"
-        system("git", "clone", "--depth", "1", url, folder)
+        system("git", "clone", "--depth", "1", url, folder) && system("chmod", "-R", "777", folder)
       end
       redirect_to "https://code.aurixsystems.vn/?folder=#{folder}", allow_other_host: true
     else
