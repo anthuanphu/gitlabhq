@@ -3,24 +3,33 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
+    ports:
+      - "8228:8228"
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
-
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url '${EXTERNAL_URL:-http://localhost}'
-        gitlab_rails['gitlab_shell_ssh_port'] = ${SSH_PORT:-22}
-
+        gitlab_rails['nginx']['listen_port'] = 8228;
+        gitlab_rails['nginx']['listen_https'] = false;
+        puma['worker_processes'] = 2;
+        sidekiq['max_concurrency'] = 10;
+        postgresql['shared_buffers'] = '256MB';
+        prometheus_monitoring['enable'] = false;
+        gitlab_kas['enable'] = false;
+        grafana['enable'] = false;
+        gitlab_pages['enable'] = false;
+        registry['enable'] = false;
+        mattermost['enable'] = false;
     restart: unless-stopped
     shm_size: "256m"
-
-volumes:
-  gitlab_config:
-  gitlab_logs:
-  gitlab_data:
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8228/-/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 600s
 
 volumes:
   gitlab_config:
