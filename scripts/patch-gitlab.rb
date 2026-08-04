@@ -119,8 +119,8 @@ unless content.include?('def update_security')
 end
 
 # add @security_setting to show action
-unless content.include?('load_security_setting')
-  content.sub!(/AccessRequestsFinder.*$\n/) { |m| "#{m}    ProjectSecuritySetting.ensure_table!\n    @security_setting = load_security_setting\n" }
+unless content.include?('@security_setting = load_security_setting')
+  content.sub!(/(@requesters[^\n]+\n)/) { |m| "#{m}    ProjectSecuritySetting.ensure_table!\n    @security_setting = load_security_setting\n" }
 end
 
 File.write(controller, content)
