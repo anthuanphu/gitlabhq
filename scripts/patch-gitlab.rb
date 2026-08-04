@@ -58,7 +58,7 @@ inject_after("#{RAILS_DIR}/app/controllers/projects/raw_controller.rb",
 
 # ---- fork_service.rb: add check at top of execute method ----
 inject_after("#{RAILS_DIR}/app/services/projects/fork_service.rb",
-  /def execute\(fork_to_project/,
+  /def execute\(fork_to_project = nil\)/,
   <<~RUBY
       if @project.security_setting&.block?(:fork) && !current_user&.admin?
         return ServiceResponse.error(message: 'Forking has been disabled for this project.', reason: :forbidden)
