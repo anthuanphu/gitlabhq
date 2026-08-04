@@ -1,5 +1,15 @@
 services:
+  init-workspace:
+    image: alpine:latest
+    volumes:
+      - /data/gitlab/workspace:/workspace
+    command: chmod -R 777 /workspace
+    restart: "no"
+
   gitlab:
+    depends_on:
+      init-workspace:
+        condition: service_completed_successfully
     build:
       context: .
       dockerfile: Dockerfile

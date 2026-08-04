@@ -15,7 +15,3 @@ COPY app/models/project_security_setting.rb ${GITLAB_RAILS_DIR}/app/models/
 COPY scripts/patch-gitlab.rb /tmp/patch-gitlab.rb
 RUN /opt/gitlab/embedded/bin/ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
 RUN mkdir -p /workspace && chmod 777 /workspace
-
-# Fix workspace permissions on every start (bind mount overrides build-time perms)
-RUN printf '#!/bin/sh\nchmod 777 /workspace 2>/dev/null || true\nexec /assets/wrapper "$@"\n' > /usr/local/bin/entrypoint-wrapper && chmod +x /usr/local/bin/entrypoint-wrapper
-ENTRYPOINT ["/usr/local/bin/entrypoint-wrapper"]
