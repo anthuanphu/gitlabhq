@@ -1,7 +1,7 @@
 FROM gitlab/gitlab-ce:latest
 
 # Bump this line to bust Docker build cache when deploying changes
-ARG CACHE_BUST=5
+ARG CACHE_BUST=6
 
 ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
     GITLAB_OMNIBUS_CONFIG="external_url 'https://git.aurixsystems.vn'; nginx['listen_port'] = 80; nginx['listen_https'] = false; nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'https', 'X-Forwarded-Ssl' => 'on' }; puma['worker_processes'] = 2; sidekiq['max_concurrency'] = 10; postgresql['shared_buffers'] = '256MB'; prometheus_monitoring['enable'] = false"
