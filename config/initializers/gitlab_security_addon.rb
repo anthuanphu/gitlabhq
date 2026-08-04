@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Source Code Protection — Auto-create table on boot
+# GitLab Source Code Protection — Auto-create table on boot
 Rails.application.config.to_prepare do
   begin
     unless ActiveRecord::Base.connection.table_exists?(:project_security_settings)
@@ -19,12 +19,4 @@ Rails.application.config.to_prepare do
   rescue => e
     Rails.logger.warn('[SourceProtection] %s' % e.message)
   end
-end
-    def check_download_access!
-      if project&.security_setting&.block?(:clone) && !user&.admin?
-        raise ForbiddenError, 'Source code download has been disabled for this project. Contact your administrator.'
-      end
-      super
-    end
-  end) rescue nil
 end
