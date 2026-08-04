@@ -14,6 +14,9 @@ services:
     shm_size: "256m"
     networks:
       - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://git.aurixsystems.vn';
