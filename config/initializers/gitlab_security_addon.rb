@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-# Source Code Protection — injects via Module#prepend (no file modification, version-safe)
+# Source Code Protection — Auto-create table on boot
 Rails.application.config.to_prepare do
-  # ========================================================================
-  # 1. Auto-create DB table (safe, fails silently)
-  # ========================================================================
   begin
     unless ActiveRecord::Base.connection.table_exists?(:project_security_settings)
       ActiveRecord::Base.connection.create_table :project_security_settings, if_not_exists: true do |t|
@@ -22,22 +19,7 @@ Rails.application.config.to_prepare do
   rescue => e
     Rails.logger.warn('[SourceProtection] %s' % e.message)
   end
-
-  # ========================================================================
-  # 2. Admin::ProjectsController — add update_security action
-  # ========================================================================
-  Admin::ProjectsController.prepend(Module.new do
-    def show
-      super
-    rescue => e
-      Rails.logger.warn('[SourceProtection] %s' % e.message)
-    end
-  end) rescue nil
-
-  # ========================================================================
-  # 3. GitAccess — block clone
-  # ========================================================================
-  Gitlab::GitAccess.prepend(Module.new do
+end
     def check_download_access!
       if project&.security_setting&.block?(:clone) && !user&.admin?
         raise ForbiddenError, 'Source code download has been disabled for this project. Contact your administrator.'
