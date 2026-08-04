@@ -10,4 +10,4 @@ COPY app/models/project_security_setting.rb ${GITLAB_RAILS_DIR}/app/models/
 
 # Patch existing files (version-safe injection)
 COPY scripts/patch-gitlab.rb /tmp/patch-gitlab.rb
-RUN ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
+RUN /opt/gitlab/embedded/bin/ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
