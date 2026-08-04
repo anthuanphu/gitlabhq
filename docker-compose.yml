@@ -6,9 +6,9 @@ services:
     ports:
       - "8228:8228"
     volumes:
-      - gitlab_config:/etc/gitlab
-      - gitlab_logs:/var/log/gitlab
-      - gitlab_data:/var/opt/gitlab
+      - /data/gitlab/config:/etc/gitlab
+      - /data/gitlab/logs:/var/log/gitlab
+      - /data/gitlab/data:/var/opt/gitlab
       - /data/gitlab/workspace:/workspace
     restart: unless-stopped
     shm_size: "256m"
@@ -23,8 +23,17 @@ services:
         prometheus_monitoring['enable'] = false;
       GITLAB_WORKSPACE_TOKEN: ${GITLAB_ADMIN_TOKEN:-}
 
-volumes:
-  gitlab_config:
-  gitlab_logs:
-  gitlab_data:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    ports:
+      - "8443:8443"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - PASSWORD=Aurix@2026
+      - DEFAULT_WORKSPACE=/workspace
+    volumes:
+      - /data/gitlab/workspace:/workspace
+      - /data/gitlab/code-config:/config
+    restart: unless-stopped
 
