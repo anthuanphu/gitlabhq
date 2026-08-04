@@ -56,6 +56,21 @@ services:
     networks:
       - coolify
 
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /data/gitlab/runner:/etc/gitlab-runner
+    environment:
+      - REGISTRATION_TOKEN=${GITLAB_RUNNER_TOKEN}
+      - CI_SERVER_URL=https://git.aurixsystems.vn
+      - RUNNER_EXECUTOR=docker
+      - DOCKER_IMAGE=alpine:latest
+      - DOCKER_NETWORK_MODE=coolify
+    restart: unless-stopped
+    networks:
+      - coolify
+
 networks:
   coolify:
     external: true
