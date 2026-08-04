@@ -188,3 +188,32 @@ unless ide_content.include?('code.aurixsystems.vn')
 end
 
 puts "[SourceProtection] All patches applied."
+
+# ---- Validate: check Ruby syntax on all patched files ----
+puts "[SourceProtection] Validating syntax..."
+PATCHED_FILES = [
+  "#{RAILS_DIR}/lib/gitlab/git_access.rb",
+  "#{RAILS_DIR}/app/controllers/projects/repositories_controller.rb",
+  "#{RAILS_DIR}/app/controllers/projects/raw_controller.rb",
+  "#{RAILS_DIR}/app/services/projects/fork_service.rb",
+  "#{RAILS_DIR}/app/models/project.rb",
+  "#{RAILS_DIR}/app/controllers/admin/projects_controller.rb",
+  "#{RAILS_DIR}/config/routes/admin.rb",
+  "#{RAILS_DIR}/app/controllers/ide_controller.rb",
+]
+
+errors = []
+PATCHED_FILES.each do |f|
+  result = system("/opt/gitlab/embedded/bin/ruby -c #{f} 2>&1")
+  unless result
+    errors << f
+    puts "  SYNTAX ERROR in: #{f}"
+  end
+end
+
+if errors.any?
+  puts "[SourceProtection] FAILED — #{errors.size} file(s) have syntax errors. Build aborted."
+  exit 1
+else
+  puts "[SourceProtection] Syntax check passed. All good."
+end
