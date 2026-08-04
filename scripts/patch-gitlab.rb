@@ -173,10 +173,17 @@ end
 ide = "#{RAILS_DIR}/app/controllers/ide_controller.rb"
 ide_content = File.read(ide)
 unless ide_content.include?('code.aurixsystems.vn')
-  new_index = <<~RUBY
+  new_index = <<~'RUBY'
   def index
     if project.present?
-      redirect_to "https://code.aurixsystems.vn/?folder=/workspace/\#{project.full_path}", allow_other_host: true
+      folder = "/workspace/#{project.full_path}"
+      unless Dir.exist?(folder)
+        token = ENV['GITLAB_WORKSPACE_TOKEN']
+        url = token ? "http://oauth2:#{token}@localhost:80/#{project.full_path}.git" : "http://localhost:80/#{project.full_path}.git"
+        system("git", "clone", "--depth", "1", url, folder)
+        system("chmod", "-R", "777", folder)
+      end
+      redirect_to "https://code.aurixsystems.vn/?folder=#{folder}", allow_other_host: true
     else
       redirect_to "https://code.aurixsystems.vn/", allow_other_host: true
     end
