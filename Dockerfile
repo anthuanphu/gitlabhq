@@ -1,18 +1,13 @@
 FROM gitlab/gitlab-ce:latest
 
 ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
-    GITLAB_OMNIBUS_CONFIG="external_url 'https://git.aurixsystems.vn'; nginx['listen_port'] = 8228; nginx['listen_https'] = false; puma['worker_processes'] = 2; sidekiq['max_concurrency'] = 10; postgresql['shared_buffers'] = '256MB'; prometheus_monitoring['enable'] = false"
+    GITLAB_OMNIBUS_CONFIG="external_url 'https://git.aurixsystems.vn'; nginx['listen_port'] = 8228; nginx['listen_https'] = false; nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'https', 'X-Forwarded-Ssl' => 'on' }; puma['worker_processes'] = 2; sidekiq['max_concurrency'] = 10; postgresql['shared_buffers'] = '256MB'; prometheus_monitoring['enable'] = false"
 
-# Source Code Protection
+# Source Code Protection — new files
 COPY config/initializers/gitlab_security_addon.rb ${GITLAB_RAILS_DIR}/config/initializers/
 COPY db/migrate/20240803000001_create_project_security_settings.rb ${GITLAB_RAILS_DIR}/db/migrate/
 COPY app/models/project_security_setting.rb ${GITLAB_RAILS_DIR}/app/models/
-COPY app/models/project.rb ${GITLAB_RAILS_DIR}/app/models/
-COPY lib/gitlab/git_access.rb ${GITLAB_RAILS_DIR}/lib/gitlab/
-COPY app/controllers/projects/repositories_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/projects/
-COPY app/controllers/projects/raw_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/projects/
-COPY app/services/projects/fork_service.rb ${GITLAB_RAILS_DIR}/app/services/projects/
-COPY app/controllers/admin/projects_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/admin/
-COPY config/routes/admin.rb ${GITLAB_RAILS_DIR}/config/routes/
-COPY app/views/admin/projects/show.html.haml ${GITLAB_RAILS_DIR}/app/views/admin/projects/
-COPY app/controllers/ide_controller.rb ${GITLAB_RAILS_DIR}/app/controllers/
+
+# Patch existing files (version-safe injection)
+COPY scripts/patch-gitlab.rb /tmp/patch-gitlab.rb
+RUN ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
