@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8228:8228"
+      - "8228:80"
     volumes:
       - /data/gitlab/config:/etc/gitlab
       - /data/gitlab/logs:/var/log/gitlab
@@ -15,7 +15,7 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://git.aurixsystems.vn';
-        nginx['listen_port'] = 8228;
+        nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
         nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'https', 'X-Forwarded-Ssl' => 'on' };
         puma['worker_processes'] = 2;
