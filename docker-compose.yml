@@ -27,7 +27,7 @@ services:
         sidekiq['max_concurrency'] = 10;
         postgresql['shared_buffers'] = '256MB';
         prometheus_monitoring['enable'] = false;
-      GITLAB_WORKSPACE_TOKEN: ${GITLAB_ADMIN_TOKEN:-}
+      GITLAB_WORKSPACE_TOKEN: change-me
 
   code-server:
     image: lscr.io/linuxserver/code-server:latest
