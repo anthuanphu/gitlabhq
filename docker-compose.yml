@@ -12,9 +12,11 @@ services:
       - /data/gitlab/workspace:/workspace
     restart: unless-stopped
     shm_size: "256m"
+    networks:
+      - coolify
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://git.aurixsystems.vn';
+        external_url 'https://git.aurixsystems.vn';
         nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
         nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'https', 'X-Forwarded-Ssl' => 'on' };
@@ -37,4 +39,10 @@ services:
       - /data/gitlab/workspace:/workspace
       - /data/gitlab/code-config:/config
     restart: unless-stopped
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
 
