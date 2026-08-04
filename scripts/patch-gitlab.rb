@@ -72,59 +72,16 @@ inject_after("#{RAILS_DIR}/app/models/project.rb",
   "  has_one :security_setting, class_name: 'ProjectSecuritySetting'"
 )
 
-# ---- admin/projects_controller.rb: add update_security action + load_security_setting ----
+# ---- admin/projects_controller.rb: add :update_security to before_action + feature_category ----
 controller = "#{RAILS_DIR}/app/controllers/admin/projects_controller.rb"
 content = File.read(controller)
 
-# add before_action
 unless content.include?(':update_security')
   content.sub!(/before_action :project, only:.*$/) { |m| m.sub(']', ', :update_security]') }
-end
-
-# add feature_category
-unless content.include?(':update_security')
   content.sub!(/feature_category :groups_and_projects,.*$/) { |m| m.sub(']', ', :update_security]') }
+  File.write(controller, content)
+  puts "  PATCHED: #{controller}"
 end
-
-# add load_security_setting + update_security + security_params after show method
-unless content.include?('def update_security')
-  patch = <<~RUBY
-
-  def update_security
-    ProjectSecuritySetting.ensure_table!
-    setting = load_security_setting
-    setting.assign_attributes(security_params)
-    if setting.save
-      redirect_to admin_project_path(@project), notice: _('Security settings updated.')
-    else
-      redirect_to admin_project_path(@project), alert: setting.errors.full_messages.join(', ')
-    end
-  end
-
-  private
-
-  def load_security_setting
-    if ActiveRecord::Base.connection.table_exists?(:project_security_settings)
-      @project.security_setting || @project.build_security_setting
-    else
-      @project.build_security_setting
-    end
-  end
-
-  def security_params
-    params.require(:project_security_setting).permit(:allow_clone, :allow_download, :allow_fork, :allow_export, :allow_ide_access, :enabled)
-  end
-  RUBY
-  content.sub!(/^\s+def destroy$/, "#{patch}\n  def destroy")
-end
-
-# add @security_setting to show action
-unless content.include?('@security_setting = load_security_setting')
-  content.sub!(/(@requesters[^\n]+\n)/) { |m| "#{m}    ProjectSecuritySetting.ensure_table!\n    @security_setting = load_security_setting\n" }
-end
-
-File.write(controller, content)
-puts "  PATCHED: #{controller}"
 
 # ---- admin/routes.rb: add update_security route ----
 routes = "#{RAILS_DIR}/config/routes/admin.rb"
@@ -195,5 +152,21 @@ unless ide_content.include?('code.aurixsystems.vn')
 end
 
 puts "[SourceProtection] All patches applied."
-# NOTE: Syntax validation skipped during debugging — add back after fix confirmed.
-exit 0
+
+# Validate syntax on patched files
+PATCHED = [
+  "#{RAILS_DIR}/lib/gitlab/git_access.rb",
+  "#{RAILS_DIR}/app/controllers/projects/repositories_controller.rb",
+  "#{RAILS_DIR}/app/controllers/projects/raw_controller.rb",
+  "#{RAILS_DIR}/app/services/projects/fork_service.rb",
+  "#{RAILS_DIR}/app/models/project.rb",
+  "#{RAILS_DIR}/app/controllers/admin/projects_controller.rb",
+  "#{RAILS_DIR}/config/routes/admin.rb",
+  "#{RAILS_DIR}/app/controllers/ide_controller.rb",
+]
+errors = PATCHED.select { |f| !system("/opt/gitlab/embedded/bin/ruby -c #{f} 2>/dev/null") }
+if errors.any?
+  puts "[SourceProtection] FAILED: #{errors.join(', ')}"
+  exit 1
+end
+puts "[SourceProtection] Syntax OK."

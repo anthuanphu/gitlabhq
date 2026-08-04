@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# GitLab Source Code Protection — Auto-create table on boot
+# Auto-create table + inject admin security UI
 Rails.application.config.to_prepare do
+  # 1. Create table
   begin
     unless ActiveRecord::Base.connection.table_exists?(:project_security_settings)
       ActiveRecord::Base.connection.create_table :project_security_settings, if_not_exists: true do |t|
@@ -19,4 +20,41 @@ Rails.application.config.to_prepare do
   rescue => e
     Rails.logger.warn('[SourceProtection] %s' % e.message)
   end
+
+  # 2. Inject @security_setting into Admin::ProjectsController#show
+  Admin::ProjectsController.prepend(Module.new do
+    def show
+      @security_setting = begin
+        ProjectSecuritySetting.ensure_table!
+        if ActiveRecord::Base.connection.table_exists?(:project_security_settings)
+          @project.security_setting || @project.build_security_setting
+        else
+          @project.build_security_setting
+        end
+      rescue => e
+        Rails.logger.warn('[SourceProtection] %s' % e.message)
+        @project.build_security_setting
+      end
+      super
+    end
+
+    def update_security
+      ProjectSecuritySetting.ensure_table!
+      setting = begin
+        if ActiveRecord::Base.connection.table_exists?(:project_security_settings)
+          @project.security_setting || @project.build_security_setting
+        else
+          @project.build_security_setting
+        end
+      end
+      setting.assign_attributes(
+        params.require(:project_security_setting).permit(:allow_clone, :allow_download, :allow_fork, :allow_export, :allow_ide_access, :enabled)
+      )
+      if setting.save
+        redirect_to admin_project_path(@project), notice: 'Security settings updated.'
+      else
+        redirect_to admin_project_path(@project), alert: setting.errors.full_messages.join(', ')
+      end
+    end
+  end) rescue nil
 end
