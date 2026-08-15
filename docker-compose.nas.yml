@@ -1,15 +1,17 @@
-# Deploy GitLab + Code Server + Runner lên NAS
-# IP: 192.168.1.168 — Chạy: docker compose up -d --build
+# Deploy GitLab + Code Server + Runner lên NAS (không cần Coolify)
+# Yêu cầu: Docker + Docker Compose trên NAS
+# Chạy: docker compose up -d
 
 services:
+  # ─── Fix quyền workspace ───
   init-workspace:
     image: alpine:latest
     volumes:
-      - /volume1/mount/gitlab/workspace:/workspace
-      - /volume1/mount/gitlab/code_config:/code_config
-    command: sh -c "chmod -R 777 /workspace && chmod -R 777 /code_config"
+      - workspace:/workspace
+    command: chmod -R 777 /workspace
     restart: "no"
 
+  # ─── GitLab CE ───
   gitlab:
     depends_on:
       init-workspace:
@@ -18,18 +20,18 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8228:80"
-      - "2222:22"
+      - "8228:80"         # Web UI (dùng port khác tránh conflict NAS)
+      - "2222:22"          # SSH (NAS thường dùng port 22)
     volumes:
-      - /volume1/mount/gitlab/config:/etc/gitlab
-      - /volume1/mount/gitlab/logs:/var/log/gitlab
-      - /volume1/mount/gitlab/data:/var/opt/gitlab
-      - /volume1/mount/gitlab/workspace:/workspace
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - workspace:/workspace
     restart: unless-stopped
     shm_size: "256m"
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://192.168.1.168:8228';
+        external_url 'http://NAS_IP:8228';
         nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
         puma['worker_processes'] = 1;
@@ -37,9 +39,8 @@ services:
         postgresql['shared_buffers'] = '128MB';
         prometheus_monitoring['enable'] = false;
         gitlab_rails['gitlab_shell_ssh_port'] = 2222;
-        gitlab_rails['env'] = { 'GITLAB_WORKSPACE_TOKEN' => '${GITLAB_WORKSPACE_TOKEN}' };
-      GITLAB_WORKSPACE_TOKEN: ${GITLAB_WORKSPACE_TOKEN}
 
+  # ─── Code Server ───
   code-server:
     image: lscr.io/linuxserver/code-server:latest
     ports:
@@ -50,18 +51,27 @@ services:
       - PASSWORD=Aurix@2026
       - DEFAULT_WORKSPACE=/workspace
     volumes:
-      - /volume1/mount/gitlab/workspace:/workspace
-      - /volume1/mount/gitlab/code_config:/config
+      - workspace:/workspace
+      - code_config:/config
     restart: unless-stopped
 
+  # ─── GitLab Runner ───
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
     volumes:
-      - /volume1/mount/gitlab/docker.sock:/var/run/docker.sock
-      - /volume1/mount/gitlab/runner_config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner_config:/etc/gitlab-runner
     environment:
       - REGISTRATION_TOKEN=${GITLAB_RUNNER_TOKEN}
       - CI_SERVER_URL=http://gitlab:80
       - RUNNER_EXECUTOR=docker
       - DOCKER_IMAGE=alpine:latest
     restart: unless-stopped
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  workspace:
+  code_config:
+  runner_config:

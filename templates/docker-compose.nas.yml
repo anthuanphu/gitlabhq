@@ -1,0 +1,7 @@
+# docker-compose.yml đặt trong /volume1/deploy/myapp trên NAS
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

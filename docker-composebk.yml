@@ -1,13 +1,9 @@
-# Deploy GitLab + Code Server + Runner lên NAS
-# IP: 192.168.1.168 — Chạy: docker compose up -d --build
-
 services:
   init-workspace:
     image: alpine:latest
     volumes:
-      - /volume1/mount/gitlab/workspace:/workspace
-      - /volume1/mount/gitlab/code_config:/code_config
-    command: sh -c "chmod -R 777 /workspace && chmod -R 777 /code_config"
+      - /data/gitlab/workspace:/workspace
+    command: chmod -R 777 /workspace
     restart: "no"
 
   gitlab:
@@ -19,24 +15,28 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8228:80"
-      - "2222:22"
     volumes:
-      - /volume1/mount/gitlab/config:/etc/gitlab
-      - /volume1/mount/gitlab/logs:/var/log/gitlab
-      - /volume1/mount/gitlab/data:/var/opt/gitlab
-      - /volume1/mount/gitlab/workspace:/workspace
+      - /data/gitlab/config:/etc/gitlab
+      - /data/gitlab/logs:/var/log/gitlab
+      - /data/gitlab/data:/var/opt/gitlab
+      - /data/gitlab/workspace:/workspace
     restart: unless-stopped
     shm_size: "256m"
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://192.168.1.168:8228';
+        external_url 'https://git.aurixsystems.vn';
         nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
-        puma['worker_processes'] = 1;
-        sidekiq['max_concurrency'] = 5;
-        postgresql['shared_buffers'] = '128MB';
+        nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'https', 'X-Forwarded-Ssl' => 'on' };
+        puma['worker_processes'] = 2;
+        sidekiq['max_concurrency'] = 10;
+        postgresql['shared_buffers'] = '256MB';
         prometheus_monitoring['enable'] = false;
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222;
         gitlab_rails['env'] = { 'GITLAB_WORKSPACE_TOKEN' => '${GITLAB_WORKSPACE_TOKEN}' };
       GITLAB_WORKSPACE_TOKEN: ${GITLAB_WORKSPACE_TOKEN}
 
@@ -50,18 +50,28 @@ services:
       - PASSWORD=Aurix@2026
       - DEFAULT_WORKSPACE=/workspace
     volumes:
-      - /volume1/mount/gitlab/workspace:/workspace
-      - /volume1/mount/gitlab/code_config:/config
+      - /data/gitlab/workspace:/workspace
+      - /data/gitlab/code-config:/config
     restart: unless-stopped
+    networks:
+      - coolify
 
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
     volumes:
-      - /volume1/mount/gitlab/docker.sock:/var/run/docker.sock
-      - /volume1/mount/gitlab/runner_config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /data/gitlab/runner:/etc/gitlab-runner
     environment:
       - REGISTRATION_TOKEN=${GITLAB_RUNNER_TOKEN}
-      - CI_SERVER_URL=http://gitlab:80
+      - CI_SERVER_URL=https://git.aurixsystems.vn
       - RUNNER_EXECUTOR=docker
       - DOCKER_IMAGE=alpine:latest
+      - DOCKER_NETWORK_MODE=coolify
     restart: unless-stopped
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
+

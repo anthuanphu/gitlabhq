@@ -1,0 +1,54 @@
+stages:
+  - test
+  - build
+  - deploy
+
+# ─── Stage 1: Test ───
+test:
+  stage: test
+  image: node:20-alpine
+  script:
+    - npm ci
+    - npm run lint
+    - npm test
+  only:
+    - main
+    - master
+
+# ─── Stage 2: Build ───
+build:
+  stage: build
+  image: node:20-alpine
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+      - package.json
+      - node_modules/
+    expire_in: 1 hour
+  only:
+    - main
+    - master
+
+# ─── Stage 3: Deploy to NAS ───
+deploy-nas:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $NAS_HOST >> ~/.ssh/known_hosts
+  script:
+    # Dừng app cũ
+    - ssh $NAS_USER@$NAS_HOST "cd $NAS_PATH && docker compose down || true"
+    # Copy file mới
+    - rsync -avz --delete dist/ package.json $NAS_USER@$NAS_HOST:$NAS_PATH/
+    # Start app mới
+    - ssh $NAS_USER@$NAS_HOST "cd $NAS_PATH && docker compose up -d"
+  only:
+    - main
+    - master

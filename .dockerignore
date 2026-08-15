@@ -60,8 +60,12 @@
 !/jh/lib/
 !/jh/config/feature_flags/
 
-# Source Code Protection
+# Source Code Protection — include directories first, then files
+!/config/initializers/
 !/config/initializers/gitlab_security_addon.rb
+!/db/migrate/
 !/db/migrate/20240803000001_create_project_security_settings.rb
+!/app/models/
 !/app/models/project_security_setting.rb
+!/scripts/
 !/scripts/patch-gitlab.rb
