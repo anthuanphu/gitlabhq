@@ -2,17 +2,7 @@
 # IP: 192.168.1.168 — Chạy: docker compose up -d --build
 
 services:
-  init-workspace:
-    image: alpine:latest
-    volumes:
-      - /volume1/mount/gitlab/workspace:/workspace
-      - /volume1/mount/gitlab/code_config:/code_config
-    command: sh -c "mkdir -p /workspace /code_config; chmod -R 777 /workspace 2>/dev/null; chmod -R 777 /code_config 2>/dev/null; exit 0"
-    restart: "no"
-
   gitlab:
-    depends_on:
-      - init-workspace
     build:
       context: .
       dockerfile: Dockerfile

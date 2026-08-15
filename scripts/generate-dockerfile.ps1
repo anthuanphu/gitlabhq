@@ -19,7 +19,7 @@ $dockerfile = @'
 FROM gitlab/gitlab-ce:latest
 
 # Bump this line to bust Docker build cache when deploying changes
-ARG CACHE_BUST=13
+ARG CACHE_BUST=14
 RUN echo "cache_bust=${CACHE_BUST}"
 
 ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
@@ -31,6 +31,9 @@ RUN echo '__B64_MODEL__' | base64 -d > ${GITLAB_RAILS_DIR}/app/models/project_se
 RUN echo '__B64_PATCH__' | base64 -d > /tmp/patch-gitlab.rb
 RUN /opt/gitlab/embedded/bin/ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
 RUN mkdir -p /workspace && chmod 777 /workspace
+
+# Make /workspace writable at every container start (entrypoint runs as root)
+RUN sed -i '2i chmod -R 777 /workspace 2>/dev/null || true' /assets/wrapper
 '@
 
 $dockerfile = $dockerfile.Replace('__B64_INITIALIZER__', $b64Initializer)
