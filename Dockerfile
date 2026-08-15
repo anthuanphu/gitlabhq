@@ -1,7 +1,7 @@
 FROM gitlab/gitlab-ce:latest
 
 # Bump this line to bust Docker build cache when deploying changes
-ARG CACHE_BUST=14
+ARG CACHE_BUST=15
 RUN echo "cache_bust=${CACHE_BUST}"
 
 ENV GITLAB_RAILS_DIR=/opt/gitlab/embedded/service/gitlab-rails \
@@ -14,5 +14,5 @@ RUN echo 'IyEvb3B0L2dpdGxhYi9lbWJlZGRlZC9iaW4vcnVieQojIEluamVjdCBTb3VyY2UgQ29kZS
 RUN /opt/gitlab/embedded/bin/ruby /tmp/patch-gitlab.rb && rm /tmp/patch-gitlab.rb
 RUN mkdir -p /workspace && chmod 777 /workspace
 
-# Make /workspace writable at every container start (entrypoint runs as root)
-RUN sed -i '2i chmod -R 777 /workspace 2>/dev/null || true' /assets/wrapper
+# NOTE: /workspace permissions at runtime are handled via GITLAB_PRE_RECONFIGURE_SCRIPT
+# (official hook in /assets/init-container of the latest gitlab-ce image)

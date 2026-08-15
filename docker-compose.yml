@@ -28,6 +28,7 @@ services:
         gitlab_rails['gitlab_shell_ssh_port'] = 2222;
         gitlab_rails['env'] = { 'GITLAB_WORKSPACE_TOKEN' => '${GITLAB_WORKSPACE_TOKEN}' };
       GITLAB_WORKSPACE_TOKEN: ${GITLAB_WORKSPACE_TOKEN}
+      GITLAB_PRE_RECONFIGURE_SCRIPT: "mkdir -p /workspace && chmod -R 777 /workspace"
 
   code-server:
     image: lscr.io/linuxserver/code-server:latest
