@@ -129,7 +129,7 @@ end
 # ---- ide_controller.rb: redirect to code-server ----
 ide = "#{RAILS_DIR}/app/controllers/ide_controller.rb"
 ide_content = File.read(ide)
-unless ide_content.include?('code.aurixsystems.vn')
+unless ide_content.include?('192.168.1.168')
   new_index = <<~'RUBY'
   def index
     if project.present?
@@ -140,9 +140,9 @@ unless ide_content.include?('code.aurixsystems.vn')
         system("git", "clone", "--depth", "1", url, folder)
         system("chmod", "-R", "777", folder)
       end
-      redirect_to "https://code.aurixsystems.vn/?folder=#{folder}", allow_other_host: true
+      redirect_to "http://192.168.1.168:8443/?folder=#{folder}", allow_other_host: true
     else
-      redirect_to "https://code.aurixsystems.vn/", allow_other_host: true
+      redirect_to "http://192.168.1.168:8443/", allow_other_host: true
     end
   end
   RUBY
