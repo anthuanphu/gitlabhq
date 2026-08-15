@@ -29,6 +29,8 @@ services:
         gitlab_rails['env'] = { 'GITLAB_WORKSPACE_TOKEN' => '${GITLAB_WORKSPACE_TOKEN}' };
       GITLAB_WORKSPACE_TOKEN: ${GITLAB_WORKSPACE_TOKEN}
       GITLAB_PRE_RECONFIGURE_SCRIPT: "mkdir -p /workspace && chmod -R 777 /workspace"
+      GITLAB_ROOT_PASSWORD: "Aurix@2026"
+      GITLAB_ROOT_EMAIL: "admin@aurixsystems.vn"
 
   code-server:
     image: lscr.io/linuxserver/code-server:latest
