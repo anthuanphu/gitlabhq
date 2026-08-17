@@ -29,7 +29,7 @@ services:
         gitlab_rails['env'] = { 'GITLAB_WORKSPACE_TOKEN' => '${GITLAB_WORKSPACE_TOKEN}' };
       GITLAB_WORKSPACE_TOKEN: ${GITLAB_WORKSPACE_TOKEN}
       GITLAB_PRE_RECONFIGURE_SCRIPT: "mkdir -p /workspace && chmod -R 777 /workspace"
-      GITLAB_POST_RECONFIGURE_SCRIPT: 'gitlab-rails runner "u = User.find_by(username: ''root''); u.password_expires_at = Time.now if u&.password_automatically_set; u.save!"'
+      GITLAB_POST_RECONFIGURE_SCRIPT: 'gitlab-rails runner "u = User.find_by(username: ''root''); if u&.password_automatically_set; u.password_expires_at = Time.now; u.save!; end"'
       GITLAB_ROOT_PASSWORD: "Aurix@2026"
       GITLAB_ROOT_EMAIL: "admin@aurixsystems.vn"
 
